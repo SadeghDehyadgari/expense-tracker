@@ -1,0 +1,71 @@
+.table-container {
+  width: 768px;
+  margin: 0 auto;
+  background-color: var(--neutrals-white);
+  border-radius: 16px;
+  padding: 32px;
+}
+
+.table-title {
+  font-family: var(--font-family);
+  font-weight: var(--font-weight-semi-bold);
+  font-size: var(--font-size-lg);
+  line-height: 100%;
+  letter-spacing: 0%;
+  color: var(--neutrals-dark-2);
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.transaction-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.transaction-table thead tr {
+  border-bottom: 1px solid var(--primary-light);
+}
+
+.transaction-table th {
+  padding: 16px;
+  font-family: var(--font-family);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-base);
+  text-align: right;
+  color: var(--neutrals-grey-1);
+}
+
+.transaction-table tbody tr {
+  border-bottom: 1px solid var(--neutrals-soft-grey-2);
+}
+
+.transaction-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.transaction-table td {
+  padding: 16px;
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  text-align: right;
+}
+
+.cell-date {
+  font-weight: var(--font-weight-medium);
+  color: var(--neutrals-dark-2);
+}
+
+.cell-income {
+  font-weight: var(--font-weight-medium);
+  color: var(--system-green);
+}
+
+.cell-expense {
+  font-weight: var(--font-weight-medium);
+  color: var(--system-red);
+}
+
+.cell-description {
+  font-weight: var(--font-weight-regular);
+  color: var(--neutrals-dark-2);
+}
