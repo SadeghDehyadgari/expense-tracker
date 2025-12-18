@@ -6,7 +6,6 @@ import './App.css';
 function App() {
   return (
     <div className="app">
-      <header></header>
       <main>
         <div className="main-container">
           <TransactionTable transactions={mockTransactions} />
