@@ -66,6 +66,10 @@
   color: var(--neutrals-dark-2);
 }
 
+.currency-label {
+  display: none;
+}
+
 @media (max-width: 768px) {
   .table-container {
     width: 100%;
@@ -133,5 +137,9 @@
     grid-row: 2 / 3;
     font-weight: var(--font-weight-regular);
     color: var(--neutrals-dark-2);
+  }
+
+  .currency-label {
+    display: inline;
   }
 }

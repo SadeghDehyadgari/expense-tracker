@@ -1,34 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import './TransactionTable.css';
 
 const TransactionTable = ({ transactions }) => {
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-
-    return () => {
-      window.removeEventListener('resize', checkMobile);
-    };
-  }, []);
-
   const transactionList = transactions.map((transaction) => (
     <tr key={transaction.id}>
       <td className="cell-date">{transaction.date}</td>
       <td className="cell-income">
-        {transaction.income > 0
-          ? `${transaction.income.toLocaleString('fa-IR')}+${isMobile ? ' تومان' : ''}`
-          : null}
+        {transaction.income > 0 ? (
+          <>
+            {transaction.income.toLocaleString('fa-IR')}+
+            <span className="currency-label"> تومان</span>
+          </>
+        ) : null}
       </td>
       <td className="cell-expense">
-        {transaction.expense > 0
-          ? `${transaction.expense.toLocaleString('fa-IR')}-${isMobile ? ' تومان' : ''}`
-          : null}
+        {transaction.expense > 0 ? (
+          <>
+            {transaction.expense.toLocaleString('fa-IR')}-
+            <span className="currency-label"> تومان</span>
+          </>
+        ) : null}
       </td>
       <td className="cell-description">{transaction.description}</td>
     </tr>
