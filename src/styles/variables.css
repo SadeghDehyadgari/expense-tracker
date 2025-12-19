@@ -1,0 +1,38 @@
+:root {
+  --primary-light: #a0ccf8;
+  --primary-dark: #57a4f2;
+  --primary-brand: #0e33f3;
+
+  --neutrals-dark-1: #1f2933;
+  --neutrals-dard-2: #242d35;
+  --neutrals-grey-1: #6b7580;
+  --neutrals-grey-2: #9ba1a8;
+  --neutrals-grey-3: #b0b8bf;
+  --neutrals-soft-grey-1: #dcdfe3;
+  --neutrals-soft-grey-2: #ebedf0;
+  --neutrals-soft-grey-3: #fafafb;
+  --neutrals-white: #ffffff;
+
+  --system-red: #ef4e4e;
+  --system-yellow: #fbbe4a;
+  --system-green: #3ebd93;
+  --system-blue: #37abff;
+
+  --font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-md: 1.125rem;
+  --font-size-lg: 1.25rem;
+  --font-size-xl: 1.5rem;
+  --font-size-2xl: 1.875rem;
+  --font-size-3xl: 2.25rem;
+
+  --font-weight-light: 300;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semi-bold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extra-bold: 800;
+}
