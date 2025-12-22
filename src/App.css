@@ -10,6 +10,10 @@
   min-height: 60vh;
 }
 
+.no-overflow {
+  overflow: hidden;
+}
+
 @media (max-width: 768px) {
   .main-container {
     width: 93vw;
