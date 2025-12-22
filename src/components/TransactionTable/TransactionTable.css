@@ -6,6 +6,13 @@
   padding: 2rem;
 }
 
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
 .table-title {
   font-family: var(--font-family);
   font-weight: var(--font-weight-semi-bold);
@@ -13,8 +20,38 @@
   line-height: 100%;
   letter-spacing: 0%;
   color: var(--neutrals-dark-2);
-  text-align: center;
-  margin-bottom: 1.5rem;
+}
+
+.add-transaction-button {
+  background-color: var(--primary-brand);
+  color: var(--neutrals-white);
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.625rem 1rem;
+  font-family: var(--font-family);
+  font-weight: var(--font-weight-regular);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.add-transaction-button:hover {
+  background-color: var(--primary-dark);
+}
+
+.add-transaction-button:active {
+  transform: scale(0.98);
+}
+
+.button-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  filter: invert(1);
 }
 
 .transaction-table {
@@ -73,15 +110,27 @@
 @media (max-width: 768px) {
   .table-container {
     width: 100%;
-    margin-top: 1rem;
-    padding: 1rem;
+    margin-block: 1rem;
+    padding: 1.5rem;
     border-radius: 1rem;
+  }
+
+  .table-header {
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
   }
 
   .table-title {
     font-size: var(--font-size-md);
-    margin-bottom: 1.5rem;
-    padding-block: 1rem;
+    text-align: right;
+    padding-block: 0.5rem;
+  }
+
+  .add-transaction-button {
+    width: auto;
+    font-size: var(--font-size-base);
   }
 
   .transaction-table thead {

@@ -1,7 +1,8 @@
 import React from 'react';
 import './TransactionTable.css';
+import PlusIcon from '../../assets/Outline/Plus.svg';
 
-const TransactionTable = ({ transactions }) => {
+const TransactionTable = ({ transactions, onAddTransactionClick }) => {
   const transactionList = transactions.map((transaction) => (
     <tr key={transaction.id}>
       <td className="cell-date">{transaction.date}</td>
@@ -27,7 +28,13 @@ const TransactionTable = ({ transactions }) => {
 
   return (
     <div className="table-container">
-      <h2 className="table-title">تراکنش‌ها</h2>
+      <div className="table-header">
+        <h2 className="table-title">تراکنش‌ها</h2>
+        <button className="add-transaction-button" onClick={onAddTransactionClick}>
+          <img src={PlusIcon} alt="Plus" className="button-icon" />
+          افزودن تراکنش
+        </button>
+      </div>
       <table className="transaction-table">
         <thead>
           <tr>
