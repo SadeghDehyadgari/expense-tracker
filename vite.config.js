@@ -12,4 +12,7 @@ export default defineConfig({
     }),
     eslint(),
   ],
+  server: {
+    host: true,
+  },
 });

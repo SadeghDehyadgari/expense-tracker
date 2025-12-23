@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import TransactionTable from './components/TransactionTable/TransactionTable';
-import mockTransactions from './data/mockTransactions';
 import Modal from './components/Modal/Modal';
 import AddTransactionForm from './components/AddTransactionForm/AddTransactionForm';
 import './App.css';
 
 function App() {
-  const [transactions, setTransactions] = useState(mockTransactions);
-  const [isModalOpen, setIsModalOpen] = useState(true);
+  const [transactions, setTransactions] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   if (isModalOpen) {
     document.body.classList.add('no-overflow');
@@ -30,11 +29,21 @@ function App() {
     handleCloseModal();
   };
 
+  const handleDeleteTransaction = (id) => {
+    setTransactions((prevTransactions) =>
+      prevTransactions.filter((transaction) => transaction.id !== id)
+    );
+  };
+
   return (
     <div className="app">
       <main>
         <div className="main-container">
-          <TransactionTable transactions={transactions} onAddTransactionClick={handleOpenModal} />
+          <TransactionTable
+            transactions={transactions}
+            onAddTransactionClick={handleOpenModal}
+            onDeleteTransaction={handleDeleteTransaction}
+          />
           {isModalOpen && (
             <Modal title="افزودن تراکنش" onClose={handleCloseModal}>
               <AddTransactionForm

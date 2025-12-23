@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import './AddTransactionForm.css';
 import CalendarIcon from '../../assets/Outline/Calendar.svg';
 
-const AddTransactionForm = ({ onSubmit, onCancel }) => {
+const AddTransactionForm = ({ onAddTransaction, onCancel }) => {
   const [formData, setFormData] = useState({
     date: '',
     amount: '',
-    type: 'expense',
+    type: 'income',
     description: '',
   });
 
@@ -27,7 +27,7 @@ const AddTransactionForm = ({ onSubmit, onCancel }) => {
       income: formData.type === 'income' ? parseInt(formData.amount) || 0 : 0,
       expense: formData.type === 'expense' ? parseInt(formData.amount) || 0 : 0,
     };
-    onSubmit(newTransaction);
+    onAddTransaction(newTransaction);
   };
 
   return (
