@@ -17,9 +17,8 @@ function App() {
   };
 
   const handleAddTransaction = (newTransaction) => {
-    const newId = transactions.length > 0 ? Math.max(...transactions.map((t) => t.id)) + 1 : 1;
+    const newId = Date.now();
     setTransactions((prevTransactions) => [{ ...newTransaction, id: newId }, ...prevTransactions]);
-
     handleCloseModal();
   };
 
