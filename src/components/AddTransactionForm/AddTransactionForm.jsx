@@ -106,13 +106,13 @@ const AddTransactionForm = ({ onAddTransaction, onCancel }) => {
         <label htmlFor="description" className="form-label">
           شرح
         </label>
-        <textarea
+        <input
           id="description"
           name="description"
           value={formData.description}
           onChange={handleInputChange}
           required
-          className="form-textarea"
+          className="form-input"
           dir="rtl"
         />
       </div>
