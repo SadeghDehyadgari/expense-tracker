@@ -9,10 +9,19 @@ const AddTransactionForm = ({ onAddTransaction, onCancel }) => {
     type: 'income',
     description: '',
   });
+  const [dateError, setDateError] = useState('');
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+
+    if (name === 'date') {
+      if (value && !/^\d{4}\/\d{2}\/\d{2}$/.test(value)) {
+        setDateError('فرمت تاریخ باید به صورت YYYY/MM/DD باشد');
+      } else {
+        setDateError('');
+      }
+    }
   };
 
   const handleRadioChange = (e) => {
@@ -21,6 +30,12 @@ const AddTransactionForm = ({ onAddTransaction, onCancel }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    if (formData.date && !/^\d{4}\/\d{2}\/\d{2}$/.test(formData.date)) {
+      setDateError('فرمت تاریخ باید به صورت YYYY/MM/DD باشد');
+      return;
+    }
+
     const newTransaction = {
       date: formData.date,
       description: formData.description,
@@ -32,7 +47,6 @@ const AddTransactionForm = ({ onAddTransaction, onCancel }) => {
 
   return (
     <form className="transaction-form" onSubmit={handleSubmit}>
-      {/* تاریخ */}
       <div className="form-group">
         <label htmlFor="date" className="form-label">
           تاریخ
@@ -45,14 +59,14 @@ const AddTransactionForm = ({ onAddTransaction, onCancel }) => {
             value={formData.date}
             onChange={handleInputChange}
             required
-            className="form-input"
+            className={`form-input ${dateError ? 'error-input' : ''}`}
             dir="rtl"
           />
           <img src={CalendarIcon} alt="calendar" className="calendar-svg" />
         </div>
       </div>
+      {dateError && <div className="error-message">{dateError}</div>}
 
-      {/* مبلغ */}
       <div className="form-group">
         <label htmlFor="amount" className="form-label">
           مبلغ (تومان)
@@ -70,7 +84,6 @@ const AddTransactionForm = ({ onAddTransaction, onCancel }) => {
         />
       </div>
 
-      {/* نوع تراکنش */}
       <div className="form-group">
         <label className="form-label">نوع تراکنش</label>
         <div className="radio-group">
@@ -101,7 +114,6 @@ const AddTransactionForm = ({ onAddTransaction, onCancel }) => {
         </div>
       </div>
 
-      {/* شرح */}
       <div className="form-group">
         <label htmlFor="description" className="form-label">
           شرح
@@ -117,7 +129,6 @@ const AddTransactionForm = ({ onAddTransaction, onCancel }) => {
         />
       </div>
 
-      {/* دکمه‌ها */}
       <div className="form-actions">
         <button type="button" className="cancel-button" onClick={onCancel}>
           انصراف

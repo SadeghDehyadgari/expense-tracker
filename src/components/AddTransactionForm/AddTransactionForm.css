@@ -42,6 +42,20 @@
   border-color: var(--primary-light);
 }
 
+.form-input.error-input {
+  border-color: var(--system-red);
+}
+
+.error-message {
+  font-family: var(--font-family);
+  font-size: 0.875rem;
+  color: var(--system-red);
+  text-align: left;
+  margin-top: -1.5rem;
+  margin-bottom: -0.5rem;
+  padding-left: 1.2rem;
+}
+
 .input-with-icon {
   position: relative;
   width: 19.5rem;
@@ -167,5 +181,11 @@
     width: calc(50% - 0.375rem);
     height: 2.5rem;
     margin: 0;
+  }
+
+  .error-message {
+    padding-right: 1rem;
+    margin-top: -1.5rem;
+    margin-bottom: 0.5rem;
   }
 }
