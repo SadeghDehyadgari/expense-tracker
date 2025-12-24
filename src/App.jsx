@@ -8,12 +8,6 @@ function App() {
   const [transactions, setTransactions] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  if (isModalOpen) {
-    document.body.classList.add('no-overflow');
-  } else {
-    document.body.classList.remove('no-overflow');
-  }
-
   const handleOpenModal = () => {
     setIsModalOpen(true);
   };
