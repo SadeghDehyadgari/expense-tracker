@@ -63,9 +63,9 @@ const AddTransactionForm = ({ onAddTransaction, onCancel }) => {
             dir="rtl"
           />
           <img src={CalendarIcon} alt="calendar" className="calendar-svg" />
+          {dateError && <div className="error-message">{dateError}</div>}
         </div>
       </div>
-      {dateError && <div className="error-message">{dateError}</div>}
 
       <div className="form-group">
         <label htmlFor="amount" className="form-label">
