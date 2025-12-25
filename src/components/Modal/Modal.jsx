@@ -1,20 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import './Modal.css';
 
 const Modal = ({ title, children, onClose }) => {
-  const [isClosing, setIsClosing] = useState(false);
-
-  useEffect(() => {
-    if (isClosing) {
-      const timer = setTimeout(() => {
-        onClose();
-      }, 300);
-      return () => clearTimeout(timer);
-    }
-  }, [isClosing, onClose]);
-
   const handleClose = () => {
-    setIsClosing(true);
+    onClose();
   };
 
   const handleContentClick = (e) => {
@@ -22,8 +11,8 @@ const Modal = ({ title, children, onClose }) => {
   };
 
   return (
-    <div className={`modal-overlay ${isClosing ? 'closing' : ''}`} onClick={handleClose}>
-      <div className={`modal-content ${isClosing ? 'closing' : ''}`} onClick={handleContentClick}>
+    <div className="modal-overlay" onClick={handleClose}>
+      <div className="modal-content" onClick={handleContentClick}>
         <div className="modal-handle"></div>
 
         <div className="modal-header">
