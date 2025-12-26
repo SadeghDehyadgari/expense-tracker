@@ -16,6 +16,10 @@ body {
   text-align: right;
 }
 
+body:has(.modal-overlay) {
+  overflow: hidden;
+}
+
 input,
 textarea,
 select {
