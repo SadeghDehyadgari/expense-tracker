@@ -1,12 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import TransactionTable from './components/TransactionTable/TransactionTable';
 import Modal from './components/Modal/Modal';
 import AddTransactionForm from './components/AddTransactionForm/AddTransactionForm';
+import {
+  loadTransactionsFromStorage,
+  saveTransactionsToStorage,
+} from './utils/localStorageHelpers';
 import './App.css';
 
 function App() {
-  const [transactions, setTransactions] = useState([]);
+  const [transactions, setTransactions] = useState(() => loadTransactionsFromStorage());
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    saveTransactionsToStorage(transactions);
+  }, [transactions]);
 
   const handleOpenModal = () => {
     setIsModalOpen(true);
