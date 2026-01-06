@@ -1,6 +1,6 @@
 .table-container {
   width: 48rem;
-  min-height: 89vh;
+  min-height: 78vh;
   margin: 0 auto;
   background-color: var(--neutrals-white);
   border-radius: 1rem;
@@ -194,7 +194,7 @@
 @media (max-width: 768px) {
   .table-container {
     width: 100%;
-    min-height: 93vh;
+    min-height: 80vh;
     margin-block: 1rem;
     padding: 1.5rem;
     border-radius: 1rem;

@@ -1,0 +1,58 @@
+.notfound-page {
+  min-height: calc(100vh - 4rem);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+}
+
+.notfound-card {
+  width: 28rem;
+  min-height: 27.125rem;
+  background-color: var(--neutrals-white);
+  border-radius: 1rem;
+  padding: 2.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+.notfound-image {
+  width: 25rem;
+  height: auto;
+  max-width: 100%;
+}
+
+.notfound-title {
+  font-family: var(--font-family);
+  font-weight: var(--font-weight-semi-bold);
+  font-size: 1.25rem;
+  line-height: 1;
+  color: var(--neutrals-dark-2);
+  text-align: center;
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .notfound-page {
+    padding: 1rem;
+  }
+
+  .notfound-card {
+    width: 100%;
+    max-width: 90vw;
+    min-height: auto;
+    padding: 1.5rem;
+  }
+
+  .notfound-image {
+    width: 100%;
+    max-width: 20rem;
+  }
+
+  .notfound-title {
+    font-size: 1.125rem;
+  }
+}
