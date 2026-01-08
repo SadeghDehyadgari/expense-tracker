@@ -1,4 +1,3 @@
-import React from 'react';
 import './TransactionTable.css';
 import PlusIcon from '../../assets/Outline/Plus.svg';
 import DeleteIcon from '../../assets/Outline/Delete.svg';

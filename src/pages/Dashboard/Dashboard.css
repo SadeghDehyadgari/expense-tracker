@@ -1,0 +1,38 @@
+.dashboard-page {
+  min-height: calc(100vh - 4rem);
+  display: flex;
+  justify-content: center;
+  align-items: start;
+  padding: 2rem;
+}
+
+.dashboard-card {
+  width: 51rem;
+  background-color: var(--neutrals-white);
+  border-radius: 1rem;
+  padding: 2.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.dashboard-title {
+  font-family: var(--font-family);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-md);
+  color: var(--neutrals-dark-2);
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .dashboard-page {
+    padding: 1rem;
+  }
+
+  .dashboard-card {
+    width: 100%;
+    max-width: 90vw;
+    min-height: 6rem;
+    padding: 1.5rem;
+  }
+}
