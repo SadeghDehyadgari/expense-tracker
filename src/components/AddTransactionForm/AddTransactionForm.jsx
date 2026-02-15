@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import { useState, useContext } from 'react';
+import TransactionContext from '../../context/TransactionContext';
 import './AddTransactionForm.css';
 import CalendarIcon from '../../assets/Outline/Calendar.svg';
 
-const AddTransactionForm = ({ onAddTransaction, onCancel }) => {
+const AddTransactionForm = ({ onCancel }) => {
+  const { dispatch } = useContext(TransactionContext);
+
   const [formData, setFormData] = useState({
     date: '',
     amount: '',
@@ -42,7 +45,9 @@ const AddTransactionForm = ({ onAddTransaction, onCancel }) => {
       income: formData.type === 'income' ? parseInt(formData.amount) || 0 : 0,
       expense: formData.type === 'expense' ? parseInt(formData.amount) || 0 : 0,
     };
-    onAddTransaction(newTransaction);
+
+    dispatch({ type: 'ADD_TRANSACTION', payload: newTransaction });
+    onCancel();
   };
 
   return (

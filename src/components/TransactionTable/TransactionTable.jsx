@@ -1,3 +1,5 @@
+import { useContext } from 'react';
+import TransactionContext from '../../context/TransactionContext';
 import './TransactionTable.css';
 import PlusIcon from '../../assets/Outline/Plus.svg';
 import DeleteIcon from '../../assets/Outline/Delete.svg';
@@ -9,8 +11,14 @@ const toPersianDigits = (text) => {
   return text.toString().replace(/\d/g, (digit) => persianDigits[digit]);
 };
 
-const TransactionTable = ({ transactions, onAddTransactionClick, onDeleteTransaction }) => {
+const TransactionTable = ({ onAddTransactionClick }) => {
+  const { state, dispatch } = useContext(TransactionContext);
+  const transactions = state.transactions;
   const isEmpty = transactions.length === 0;
+
+  const handleDelete = (id) => {
+    dispatch({ type: 'DELETE_TRANSACTION', payload: id });
+  };
 
   return (
     <div className="table-container">
@@ -63,7 +71,7 @@ const TransactionTable = ({ transactions, onAddTransactionClick, onDeleteTransac
                   <td className="cell-actions">
                     <button
                       className="delete-button"
-                      onClick={() => onDeleteTransaction(transaction.id)}
+                      onClick={() => handleDelete(transaction.id)}
                       aria-label="حذف تراکنش"
                     >
                       <img src={DeleteIcon} alt="Delete" className="delete-icon" />
