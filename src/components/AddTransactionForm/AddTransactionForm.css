@@ -172,6 +172,17 @@
   cursor: pointer;
 }
 
+/* Hides spinner arrows for number input */
+.transaction-form input[type='number'] {
+  -moz-appearance: textfield;
+}
+
+.transaction-form input[type='number']::-webkit-inner-spin-button,
+.transaction-form input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 @media (max-width: 768px) {
   .form-actions {
     justify-content: space-between;
