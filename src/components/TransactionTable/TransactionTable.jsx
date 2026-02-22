@@ -1,15 +1,10 @@
 import { useContext } from 'react';
 import TransactionContext from '../../context/TransactionContext';
+import { toPersianDigits, formatNumber } from '../../utils/formatters';
 import './TransactionTable.css';
 import PlusIcon from '../../assets/Outline/Plus.svg';
 import DeleteIcon from '../../assets/Outline/Delete.svg';
 import DangerCircleIcon from '../../assets/Outline/Danger Circle.svg';
-
-const toPersianDigits = (text) => {
-  if (!text) return '';
-  const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
-  return text.toString().replace(/\d/g, (digit) => persianDigits[digit]);
-};
 
 const TransactionTable = ({ onAddTransactionClick }) => {
   const { state, dispatch } = useContext(TransactionContext);
@@ -54,7 +49,7 @@ const TransactionTable = ({ onAddTransactionClick }) => {
                   <td className="cell-income">
                     {transaction.income > 0 ? (
                       <>
-                        {transaction.income.toLocaleString('fa-IR')}+
+                        {formatNumber(transaction.income)}+
                         <span className="currency-label"> تومان</span>
                       </>
                     ) : null}
@@ -62,7 +57,7 @@ const TransactionTable = ({ onAddTransactionClick }) => {
                   <td className="cell-expense">
                     {transaction.expense > 0 ? (
                       <>
-                        {transaction.expense.toLocaleString('fa-IR')}-
+                        {formatNumber(transaction.expense)}-
                         <span className="currency-label"> تومان</span>
                       </>
                     ) : null}
