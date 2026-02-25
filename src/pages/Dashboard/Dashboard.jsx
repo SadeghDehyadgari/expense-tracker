@@ -13,8 +13,14 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import TransactionContext from '../../context/TransactionContext';
-import useDashboard from '../../hooks/useDashboard';
-import { formatNumber, formatPercentage, toPersianDigits } from '../../utils/formatters';
+import useFilteredData from '../../hooks/useFilteredData';
+import {
+  formatNumber,
+  toPersianDigits,
+  formatMonthLabel,
+  formatMonthNumeric,
+  formatDayLabel,
+} from '../../utils/formatters';
 import './Dashboard.css';
 
 const COLORS = {
@@ -24,8 +30,21 @@ const COLORS = {
 
 const Dashboard = () => {
   const { state } = useContext(TransactionContext);
-  const transactions = state.transactions;
-  const { totalIncome, totalExpense, balance, monthlyData, pieData } = useDashboard(transactions);
+  const allTransactions = state.transactions;
+
+  const {
+    timeRange,
+    effectiveYear,
+    effectiveMonth,
+    availableYears,
+    availableMonths,
+    handlers,
+    totals,
+    pieData,
+    chartData,
+  } = useFilteredData(allTransactions);
+
+  const { totalIncome, totalExpense, balance } = totals;
 
   const renderPieLabel = useCallback(({ cx, cy, midAngle, outerRadius, percent, name }) => {
     const RADIAN = Math.PI / 180;
@@ -44,12 +63,12 @@ const Dashboard = () => {
         fontSize="12"
         fontFamily="var(--font-family)"
       >
-        {`${name} ${formatPercentage(percent * 100)}%`}
+        {`${name} ${(percent * 100).toFixed(0)}%`}
       </text>
     );
   }, []);
 
-  if (transactions.length === 0) {
+  if (allTransactions.length === 0) {
     return (
       <div className="dashboard-page">
         <div className="empty-state">
@@ -63,6 +82,56 @@ const Dashboard = () => {
   return (
     <div className="dashboard-page">
       <div className="dashboard-content">
+        <div className="filter-bar">
+          <div className="filter-group">
+            <label htmlFor="timeRange">بازه زمانی</label>
+            <select
+              id="timeRange"
+              className="filter-select"
+              value={timeRange}
+              onChange={handlers.handleRangeChange}
+            >
+              <option value="overall">کلی</option>
+              <option value="year">سالانه</option>
+              <option value="month">ماهانه</option>
+            </select>
+          </div>
+
+          <div className="filter-group">
+            <label htmlFor="yearSelect">سال</label>
+            <select
+              id="yearSelect"
+              className="filter-select"
+              value={effectiveYear}
+              onChange={(e) => handlers.handleYearChange(e.target.value)}
+              disabled={timeRange !== 'year'}
+            >
+              {availableYears.map((year) => (
+                <option key={year} value={year}>
+                  {toPersianDigits(year)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="filter-group">
+            <label htmlFor="monthSelect">ماه</label>
+            <select
+              id="monthSelect"
+              className="filter-select"
+              value={effectiveMonth}
+              onChange={(e) => handlers.handleMonthChange(e.target.value)}
+              disabled={timeRange !== 'month'}
+            >
+              {availableMonths.map((ym) => (
+                <option key={ym} value={ym}>
+                  {formatMonthLabel(ym)}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
         <div className="summary-cards">
           <div className="summary-card income">
             <span className="card-label">کل درآمد</span>
@@ -104,21 +173,31 @@ const Dashboard = () => {
             </ResponsiveContainer>
           </div>
 
-          {monthlyData.length > 0 && (
+          {chartData.length > 0 && (
             <div className="chart-card">
-              <h3>روند ماهانه درآمد و هزینه</h3>
+              <h3>
+                {timeRange === 'month' && 'روند روزانه درآمد و هزینه'}
+                {timeRange === 'year' && 'روند ماهانه درآمد و هزینه'}
+                {timeRange === 'overall' && 'روند ماهانه درآمد و هزینه'}
+              </h3>
               <ResponsiveContainer width="100%" height={350} className="chart-wrapper">
-                <BarChart data={monthlyData}>
+                <BarChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis
-                    dataKey="month"
+                    dataKey={timeRange === 'month' ? 'day' : 'month'}
                     angle={-45}
                     textAnchor="end"
                     interval={0}
                     height={70}
                     tick={{ fontSize: 12, fontFamily: 'var(--font-family)' }}
                     tickMargin={15}
-                    tickFormatter={toPersianDigits}
+                    tickFormatter={(value) => {
+                      if (timeRange === 'month') {
+                        return formatDayLabel(value);
+                      } else {
+                        return formatMonthNumeric(value);
+                      }
+                    }}
                   />
                   <YAxis
                     tickFormatter={formatNumber}
@@ -127,7 +206,13 @@ const Dashboard = () => {
                   />
                   <Tooltip
                     formatter={(value) => `${formatNumber(value)} تومان`}
-                    labelFormatter={toPersianDigits}
+                    labelFormatter={(label) => {
+                      if (timeRange === 'month') {
+                        return `روز ${formatDayLabel(label)}`;
+                      } else {
+                        return formatMonthNumeric(label);
+                      }
+                    }}
                   />
                   <Legend wrapperStyle={{ paddingTop: 20 }} />
                   <Bar dataKey="income" fill={COLORS.green} name="درآمد" barSize={40} />
