@@ -37,6 +37,10 @@
   gap: 0.25rem;
 }
 
+.pointer {
+  cursor: pointer;
+}
+
 .form-input:focus {
   outline: none;
   border-color: var(--primary-light);
@@ -180,6 +184,10 @@
 .transaction-form input[type='number']::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
+}
+
+.compact-calendar {
+  font-size: 0.6rem !important;
 }
 
 @media (max-width: 768px) {

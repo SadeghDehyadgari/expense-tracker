@@ -3,7 +3,7 @@ import TransactionContext from '../../context/TransactionContext';
 import DatePicker from '@amir04lm26/react-modern-calendar-date-picker';
 import '@amir04lm26/react-modern-calendar-date-picker/lib/DatePicker.css';
 import CalendarIcon from '../../assets/Outline/Calendar.svg';
-import toEnglishDigits from '../../utils/digitUtils';
+import { toEnglishDigits } from '../../utils/formatters';
 import './AddTransactionForm.css';
 
 const AddTransactionForm = ({ onCancel }) => {
@@ -62,7 +62,13 @@ const AddTransactionForm = ({ onCancel }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (formData.date && !/^\d{4}\/\d{2}\/\d{2}$/.test(formData.date)) {
+    // Prevent submission without a selected date
+    if (!formData.date) {
+      setDateError('لطفاً تاریخ را انتخاب کنید');
+      return;
+    }
+
+    if (!/^\d{4}\/\d{2}\/\d{2}$/.test(formData.date)) {
       setDateError('فرمت تاریخ باید به صورت YYYY/MM/DD باشد');
       return;
     }
@@ -99,6 +105,7 @@ const AddTransactionForm = ({ onCancel }) => {
             minimumDate={minDate}
             maximumDate={maxDate}
             shouldHighlightWeekends
+            calendarClassName="compact-calendar"
             style={{ width: '100%' }}
             renderInput={({ ref }) => (
               <>
@@ -109,11 +116,12 @@ const AddTransactionForm = ({ onCancel }) => {
                   value={formData.date}
                   onChange={() => {}}
                   required
-                  className={`form-input ${dateError ? 'error-input' : ''}`}
+                  className={`form-input pointer ${dateError ? 'error-input' : ''}`}
                   dir="rtl"
                   autoComplete="off"
                   readOnly
                   ref={ref}
+                  placeholder="برای انتخاب تاریخ کلیک کنید"
                 />
                 <img
                   src={CalendarIcon}
@@ -121,6 +129,7 @@ const AddTransactionForm = ({ onCancel }) => {
                   className="calendar-svg"
                   onClick={() => ref.current.focus()}
                   style={{ cursor: 'pointer' }}
+                  title="انتخاب تاریخ"
                 />
                 {dateError && <div className="error-message">{dateError}</div>}
               </>

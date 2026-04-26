@@ -13,7 +13,10 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import TransactionContext from '../../context/TransactionContext';
-import useFilteredData from '../../hooks/useFilteredData';
+import useAvailableDates from '../../hooks/useAvailableDates'; // New
+import useTransactionFilters from '../../hooks/useTransactionFilters'; // New
+import useFilteredTransactions from '../../hooks/useFilteredTransactions'; // New
+import useTransactionStats from '../../hooks/useTransactionStats'; // New
 import {
   formatNumber,
   toPersianDigits,
@@ -32,19 +35,24 @@ const Dashboard = () => {
   const { state } = useContext(TransactionContext);
   const allTransactions = state.transactions;
 
-  const {
+  const { availableYears, availableMonths } = useAvailableDates(allTransactions);
+
+  const { timeRange, effectiveYear, effectiveMonth, chartRange, setChartRange, handlers } =
+    useTransactionFilters(availableYears, availableMonths);
+
+  const filteredTransactions = useFilteredTransactions(
+    allTransactions,
     timeRange,
     effectiveYear,
+    effectiveMonth
+  );
+
+  const { totals, pieData, chartData } = useTransactionStats(
+    filteredTransactions,
+    timeRange,
     effectiveMonth,
-    availableYears,
-    availableMonths,
-    handlers,
-    totals,
-    pieData,
-    chartData,
-    chartRange,
-    setChartRange,
-  } = useFilteredData(allTransactions);
+    chartRange
+  );
 
   const { totalIncome, totalExpense, balance } = totals;
 
@@ -183,7 +191,6 @@ const Dashboard = () => {
                 {timeRange === 'overall' && 'روند ماهانه درآمد و هزینه'}
               </h3>
 
-              {/* Chart range filter moved here, visible only when timeRange is 'overall' */}
               {timeRange === 'overall' && (
                 <div className="chart-filter-row">
                   <label htmlFor="chartRange" className="chart-filter-label">
