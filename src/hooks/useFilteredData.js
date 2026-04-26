@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import toEnglishDigits from '../utils/digitUtils';
 
 const getYear = (dateStr) => {
   const normalized = dateStr.replace(/\//g, '-');
@@ -15,10 +16,52 @@ const getDay = (dateStr) => {
   return parseInt(normalized.substring(8, 10), 10);
 };
 
+const getCurrentJalaliInfo = () => {
+  const formatter = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
+    year: 'numeric',
+    month: '2-digit',
+  });
+  const parts = formatter.formatToParts(new Date());
+  let year = '',
+    month = '';
+  parts.forEach((part) => {
+    if (part.type === 'year') year = part.value;
+    if (part.type === 'month') month = part.value;
+  });
+  year = toEnglishDigits(year);
+  month = toEnglishDigits(month);
+  month = month.padStart(2, '0');
+  return {
+    year,
+    month,
+    yearMonth: `${year}-${month}`,
+  };
+};
+
+const last12MonthsList = () => {
+  const { year: currentYearStr, month: currentMonthStr } = getCurrentJalaliInfo();
+  const currentYear = parseInt(currentYearStr, 10);
+  const currentMonth = parseInt(currentMonthStr, 10);
+  const months = [];
+
+  for (let i = 11; i >= 0; i--) {
+    let monthNum = currentMonth - i;
+    let yearNum = currentYear;
+    while (monthNum <= 0) {
+      monthNum += 12;
+      yearNum -= 1;
+    }
+    const mStr = monthNum.toString().padStart(2, '0');
+    months.push(`${yearNum}-${mStr}`);
+  }
+  return months;
+};
+
 const useFilteredData = (allTransactions) => {
   const [timeRange, setTimeRange] = useState('overall');
   const [rawYear, setRawYear] = useState('');
   const [rawMonth, setRawMonth] = useState('');
+  const [chartRange, setChartRange] = useState('all');
 
   const { availableYears, availableMonths } = useMemo(() => {
     const years = new Set();
@@ -81,9 +124,8 @@ const useFilteredData = (allTransactions) => {
     return data;
   }, [totals]);
 
-  const chartData = useMemo(() => {
+  const baseChartData = useMemo(() => {
     if (filteredTransactions.length === 0) return [];
-
     if (timeRange === 'month' && effectiveMonth) {
       const dailyMap = new Map();
       filteredTransactions.forEach((t) => {
@@ -113,6 +155,24 @@ const useFilteredData = (allTransactions) => {
     }
   }, [filteredTransactions, timeRange, effectiveMonth]);
 
+  const chartData = useMemo(() => {
+    if (timeRange !== 'overall') {
+      return baseChartData;
+    }
+    if (chartRange === 'all') {
+      return baseChartData;
+    }
+    const { year: currentYear } = getCurrentJalaliInfo();
+    if (chartRange === 'currentYear') {
+      return baseChartData.filter((item) => item.month && getYear(item.month) === currentYear);
+    }
+    if (chartRange === 'last12Months') {
+      const last12 = last12MonthsList();
+      return baseChartData.filter((item) => item.month && last12.includes(item.month));
+    }
+    return baseChartData;
+  }, [baseChartData, chartRange, timeRange]);
+
   const handleRangeChange = (e) => {
     setTimeRange(e.target.value);
   };
@@ -136,6 +196,8 @@ const useFilteredData = (allTransactions) => {
       handleYearChange,
       handleMonthChange,
     },
+    chartRange,
+    setChartRange,
     totals,
     pieData,
     chartData,

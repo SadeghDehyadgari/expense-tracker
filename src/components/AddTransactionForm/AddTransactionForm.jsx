@@ -1,37 +1,10 @@
 import { useState, useContext } from 'react';
 import TransactionContext from '../../context/TransactionContext';
-import './AddTransactionForm.css';
+import DatePicker from '@amir04lm26/react-modern-calendar-date-picker';
+import '@amir04lm26/react-modern-calendar-date-picker/lib/DatePicker.css';
 import CalendarIcon from '../../assets/Outline/Calendar.svg';
-
-// ADDED: Convert Persian and Arabic digits to English
-const toEnglishDigits = (str) => {
-  if (!str) return '';
-
-  const digitMap = {
-    '۰': '0',
-    '٠': '0',
-    '۱': '1',
-    '١': '1',
-    '۲': '2',
-    '٢': '2',
-    '۳': '3',
-    '٣': '3',
-    '۴': '4',
-    '٤': '4',
-    '۵': '5',
-    '٥': '5',
-    '۶': '6',
-    '٦': '6',
-    '۷': '7',
-    '٧': '7',
-    '۸': '8',
-    '٨': '8',
-    '۹': '9',
-    '٩': '9',
-  };
-
-  return str.replace(/[۰-۹٠-٩]/g, (char) => digitMap[char]);
-};
+import toEnglishDigits from '../../utils/digitUtils';
+import './AddTransactionForm.css';
 
 const AddTransactionForm = ({ onCancel }) => {
   const { dispatch } = useContext(TransactionContext);
@@ -44,33 +17,41 @@ const AddTransactionForm = ({ onCancel }) => {
   });
   const [dateError, setDateError] = useState('');
   const [amountError, setAmountError] = useState('');
+  const [selectedDayObj, setSelectedDayObj] = useState(null);
+
+  const minDate = { year: 1300, month: 1, day: 1 };
+  const maxDate = { year: 1450, month: 12, day: 29 };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
 
-    // Convert Persian digits to English for date and amount fields
-    let processedValue = value;
-    if (name === 'date' || name === 'amount') {
-      processedValue = toEnglishDigits(value);
-    }
-
-    setFormData((prev) => ({ ...prev, [name]: processedValue }));
-
-    if (name === 'date') {
-      if (processedValue && !/^\d{4}\/\d{2}\/\d{2}$/.test(processedValue)) {
-        setDateError('فرمت تاریخ باید به صورت YYYY/MM/DD باشد');
-      } else {
-        setDateError('');
-      }
-    }
-
     if (name === 'amount') {
+      const processedValue = toEnglishDigits(value);
+      setFormData((prev) => ({ ...prev, amount: processedValue }));
+
       const numValue = Number(processedValue);
       if (processedValue && (numValue <= 0 || isNaN(numValue))) {
         setAmountError('مبلغ باید بزرگتر از صفر باشد');
       } else {
         setAmountError('');
       }
+      return;
+    }
+
+    if (name === 'description') {
+      setFormData((prev) => ({ ...prev, description: value }));
+    }
+  };
+
+  const handleDateChange = (selectedDay) => {
+    if (selectedDay) {
+      const formatted = `${selectedDay.year}/${String(selectedDay.month).padStart(2, '0')}/${String(selectedDay.day).padStart(2, '0')}`;
+      setFormData((prev) => ({ ...prev, date: formatted }));
+      setSelectedDayObj(selectedDay);
+      setDateError('');
+    } else {
+      setFormData((prev) => ({ ...prev, date: '' }));
+      setSelectedDayObj(null);
     }
   };
 
@@ -81,7 +62,6 @@ const AddTransactionForm = ({ onCancel }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Date validation
     if (formData.date && !/^\d{4}\/\d{2}\/\d{2}$/.test(formData.date)) {
       setDateError('فرمت تاریخ باید به صورت YYYY/MM/DD باشد');
       return;
@@ -111,19 +91,41 @@ const AddTransactionForm = ({ onCancel }) => {
           تاریخ
         </label>
         <div className="input-with-icon">
-          <input
-            type="text"
-            id="date"
-            name="date"
-            value={formData.date}
-            onChange={handleInputChange}
-            required
-            className={`form-input ${dateError ? 'error-input' : ''}`}
-            dir="rtl"
-            autoComplete="off"
+          <DatePicker
+            value={selectedDayObj}
+            onChange={handleDateChange}
+            locale="fa"
+            calendar="persian"
+            minimumDate={minDate}
+            maximumDate={maxDate}
+            shouldHighlightWeekends
+            style={{ width: '100%' }}
+            renderInput={({ ref }) => (
+              <>
+                <input
+                  type="text"
+                  id="date"
+                  name="date"
+                  value={formData.date}
+                  onChange={() => {}}
+                  required
+                  className={`form-input ${dateError ? 'error-input' : ''}`}
+                  dir="rtl"
+                  autoComplete="off"
+                  readOnly
+                  ref={ref}
+                />
+                <img
+                  src={CalendarIcon}
+                  alt="calendar"
+                  className="calendar-svg"
+                  onClick={() => ref.current.focus()}
+                  style={{ cursor: 'pointer' }}
+                />
+                {dateError && <div className="error-message">{dateError}</div>}
+              </>
+            )}
           />
-          <img src={CalendarIcon} alt="calendar" className="calendar-svg" />
-          {dateError && <div className="error-message">{dateError}</div>}
         </div>
       </div>
 

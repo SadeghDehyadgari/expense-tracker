@@ -42,6 +42,8 @@ const Dashboard = () => {
     totals,
     pieData,
     chartData,
+    chartRange,
+    setChartRange,
   } = useFilteredData(allTransactions);
 
   const { totalIncome, totalExpense, balance } = totals;
@@ -180,6 +182,26 @@ const Dashboard = () => {
                 {timeRange === 'year' && 'روند ماهانه درآمد و هزینه'}
                 {timeRange === 'overall' && 'روند ماهانه درآمد و هزینه'}
               </h3>
+
+              {/* Chart range filter moved here, visible only when timeRange is 'overall' */}
+              {timeRange === 'overall' && (
+                <div className="chart-filter-row">
+                  <label htmlFor="chartRange" className="chart-filter-label">
+                    محدودهٔ نمودار
+                  </label>
+                  <select
+                    id="chartRange"
+                    className="filter-select filter-select--sm"
+                    value={chartRange}
+                    onChange={(e) => setChartRange(e.target.value)}
+                  >
+                    <option value="all">همه</option>
+                    <option value="currentYear">سال جاری</option>
+                    <option value="last12Months">۱۲ ماه گذشته</option>
+                  </select>
+                </div>
+              )}
+
               <ResponsiveContainer width="100%" height={350} className="chart-wrapper">
                 <BarChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" />
