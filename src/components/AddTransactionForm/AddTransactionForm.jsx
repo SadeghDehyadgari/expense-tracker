@@ -68,11 +68,6 @@ const AddTransactionForm = ({ onCancel }) => {
       return;
     }
 
-    if (!/^\d{4}\/\d{2}\/\d{2}$/.test(formData.date)) {
-      setDateError('فرمت تاریخ باید به صورت YYYY/MM/DD باشد');
-      return;
-    }
-
     const amountNum = Number(formData.amount);
     if (!formData.amount || amountNum <= 0 || isNaN(amountNum)) {
       setAmountError('مبلغ باید بزرگتر از صفر باشد');
