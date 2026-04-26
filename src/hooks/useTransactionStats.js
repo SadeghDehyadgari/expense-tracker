@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import {
   getDay,
+  getYear,
   getYearMonth,
   getCurrentJalaliInfo,
   last12MonthsList,
@@ -70,7 +71,7 @@ const useTransactionStats = (filteredTransactions, timeRange, effectiveMonth, ch
     }
     const { year: currentYear } = getCurrentJalaliInfo();
     if (chartRange === 'currentYear') {
-      return baseChartData.filter((item) => item.month && getYearMonth(item.month) === currentYear);
+      return baseChartData.filter((item) => item.month && getYear(item.month) === currentYear);
     }
     if (chartRange === 'last12Months') {
       const last12 = last12MonthsList();
