@@ -111,9 +111,9 @@
 }
 
 .cell-actions {
-  text-align: center !important;
-  width: 60px;
+  text-align: center;
   padding: 1rem 0.5rem !important;
+  position: relative;
 }
 
 .delete-button {
@@ -189,6 +189,87 @@
   color: #899199;
   text-align: center;
   margin: 0;
+}
+
+/* --- Added for kebab menu dropdown --- */
+/* Kebab button styling */
+.kebab-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.375rem;
+  border-radius: 0.25rem;
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  width: 16px;
+  height: 32px;
+  margin: 0 auto;
+}
+
+.kebab-button:hover {
+  background-color: var(--neutrals-soft-grey-2);
+}
+
+.kebab-button:active {
+  transform: scale(0.95);
+}
+
+/* Dropdown container */
+.dropdown-menu {
+  position: absolute;
+  top: 80%;
+  right: 0;
+  transform: translateX(60%);
+  width: 6rem;
+  background: var(--neutrals-white);
+  border-radius: 0.375rem;
+  padding: 0.25rem;
+  box-shadow:
+    0px 9px 28px 8px #0000000d,
+    0px 3px 6px -4px #0000001f,
+    0px 6px 16px 0px #00000014;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  z-index: 100;
+}
+
+/* Individual dropdown items */
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.375rem 0.5rem;
+  background: transparent;
+  border: none;
+  border-radius: 0.25rem;
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  color: var(--neutrals-dark-2);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.dropdown-item:hover {
+  background-color: var(--neutrals-soft-grey-3); /* Light hover effect */
+}
+
+.dropdown-item-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  filter: invert(44%) sepia(8%) saturate(481%) hue-rotate(169deg) brightness(91%) contrast(87%);
+  /* Similar icon color as the old delete button */
+}
+
+.dropdown-menu-above.dropdown-menu {
+  top: auto;
+  bottom: 80%;
+  margin-bottom: 0.25rem; /* A little space above the button */
+  transform: translateX(60%);
 }
 
 @media (max-width: 768px) {
@@ -278,10 +359,7 @@
     grid-row: 2 / 3;
     text-align: left;
     padding: 0 !important;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    width: 100%;
+    justify-self: flex-end;
   }
 
   .delete-button {
@@ -311,5 +389,16 @@
   .empty-state-text {
     font-size: var(--font-size-sm);
     padding: 0 1rem;
+  }
+
+  .dropdown-menu {
+    top: 110%;
+    right: auto;
+    left: 0;
+    transform: translateX(0);
+  }
+
+  .dropdown-menu-above.dropdown-menu {
+    transform: translateX(0);
   }
 }
