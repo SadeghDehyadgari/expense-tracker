@@ -56,4 +56,26 @@ const last12MonthsList = () => {
   return months;
 };
 
-export { getYear, getYearMonth, getDay, getCurrentJalaliInfo, last12MonthsList };
+/**
+ * Parse a Jalali date string 'YYYY/MM/DD' into an object { year, month, day }.
+ * Returns null if the string is invalid or empty.
+ */
+const parseDateString = (dateString) => {
+  if (!dateString) return null;
+  const parts = dateString.split('/');
+  if (parts.length !== 3) return null;
+  return {
+    year: parseInt(parts[0], 10),
+    month: parseInt(parts[1], 10),
+    day: parseInt(parts[2], 10),
+  };
+};
+
+export {
+  getYear,
+  getYearMonth,
+  getDay,
+  getCurrentJalaliInfo,
+  last12MonthsList,
+  parseDateString, // Added for reuse (AddTransactionForm, etc.)
+};

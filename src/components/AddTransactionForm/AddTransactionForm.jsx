@@ -4,20 +4,38 @@ import DatePicker from '@amir04lm26/react-modern-calendar-date-picker';
 import '@amir04lm26/react-modern-calendar-date-picker/lib/DatePicker.css';
 import CalendarIcon from '../../assets/Outline/Calendar.svg';
 import { toEnglishDigits } from '../../utils/formatters';
+import { parseDateString } from '../../utils/jalaliDateUtils';
 import './AddTransactionForm.css';
 
-const AddTransactionForm = ({ onCancel }) => {
+const AddTransactionForm = ({ onCancel, mode = 'add', initialData = null }) => {
   const { dispatch } = useContext(TransactionContext);
 
-  const [formData, setFormData] = useState({
-    date: '',
-    amount: '',
-    type: 'income',
-    description: '',
-  });
+  // --- Initialize form data based on mode and initialData ---
+  const getInitialFormData = () => {
+    if (mode === 'edit' && initialData) {
+      const type = initialData.income > 0 ? 'income' : 'expense';
+      const amount = initialData.income > 0 ? initialData.income : initialData.expense;
+      return {
+        date: initialData.date || '',
+        amount: amount ? amount.toString() : '',
+        type,
+        description: initialData.description || '',
+      };
+    }
+    return { date: '', amount: '', type: 'income', description: '' };
+  };
+
+  const [formData, setFormData] = useState(getInitialFormData);
   const [dateError, setDateError] = useState('');
   const [amountError, setAmountError] = useState('');
-  const [selectedDayObj, setSelectedDayObj] = useState(null);
+
+  // Initialize selectedDayObj from initialData's date string using the utility
+  const [selectedDayObj, setSelectedDayObj] = useState(() => {
+    if (mode === 'edit' && initialData?.date) {
+      return parseDateString(initialData.date);
+    }
+    return null;
+  });
 
   const minDate = { year: 1300, month: 1, day: 1 };
   const maxDate = { year: 1450, month: 12, day: 29 };
@@ -62,7 +80,6 @@ const AddTransactionForm = ({ onCancel }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Prevent submission without a selected date
     if (!formData.date) {
       setDateError('لطفاً تاریخ را انتخاب کنید');
       return;
@@ -74,16 +91,29 @@ const AddTransactionForm = ({ onCancel }) => {
       return;
     }
 
-    const newTransaction = {
+    const transactionData = {
       date: formData.date,
       description: formData.description,
       income: formData.type === 'income' ? amountNum : 0,
       expense: formData.type === 'expense' ? amountNum : 0,
     };
 
-    dispatch({ type: 'ADD_TRANSACTION', payload: newTransaction });
+    if (mode === 'edit' && initialData?.id) {
+      dispatch({
+        type: 'EDIT_TRANSACTION',
+        payload: {
+          id: initialData.id,
+          updatedData: transactionData,
+        },
+      });
+    } else {
+      dispatch({ type: 'ADD_TRANSACTION', payload: transactionData });
+    }
+
     onCancel();
   };
+
+  const submitLabel = mode === 'edit' ? 'ویرایش' : 'ثبت';
 
   return (
     <form className="transaction-form" onSubmit={handleSubmit}>
@@ -204,7 +234,7 @@ const AddTransactionForm = ({ onCancel }) => {
           انصراف
         </button>
         <button type="submit" className="submit-button">
-          ثبت
+          {submitLabel}
         </button>
       </div>
     </form>
