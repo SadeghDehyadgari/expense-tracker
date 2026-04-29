@@ -162,7 +162,7 @@
 }
 
 .submit-button {
-  width: 3.625rem;
+  min-width: 3.625rem;
   height: 2rem;
   border-radius: 0.5rem;
   gap: 0.5rem;
