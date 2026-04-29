@@ -7,8 +7,9 @@ import DeleteIcon from '../../assets/Outline/Delete.svg';
 import EditSquareIcon from '../../assets/Outline/Edit Square.svg';
 import DangerCircleIcon from '../../assets/Outline/Danger Circle.svg';
 
-const TransactionTable = ({ onAddTransactionClick, onEditTransaction }) => {
-  const { state, dispatch } = useContext(TransactionContext);
+// MODIFIED: Added onDeleteTransaction prop to support confirmation flow
+const TransactionTable = ({ onAddTransactionClick, onEditTransaction, onDeleteTransaction }) => {
+  const { state } = useContext(TransactionContext);
   const transactions = state.transactions;
   const isEmpty = transactions.length === 0;
 
@@ -32,7 +33,6 @@ const TransactionTable = ({ onAddTransactionClick, onEditTransaction }) => {
 
   // Auto-flip: check if dropdown overflows the bottom of the scrollable container
   useEffect(() => {
-    // If no menu is open, do nothing (no state update needed, avoid synchronous setState)
     if (openMenuId === null || !menuRef.current) {
       return;
     }
@@ -48,7 +48,6 @@ const TransactionTable = ({ onAddTransactionClick, onEditTransaction }) => {
       const dropdownRect = dropdown.getBoundingClientRect();
       const containerRect = scrollContainer.getBoundingClientRect();
 
-      // If the dropdown's bottom would overflow the container, flip it above
       setMenuAbove(dropdownRect.bottom > containerRect.bottom - 4);
     });
 
@@ -59,8 +58,9 @@ const TransactionTable = ({ onAddTransactionClick, onEditTransaction }) => {
     setOpenMenuId((prev) => (prev === id ? null : id));
   };
 
+  // MODIFIED: Instead of direct dispatch, calls onDeleteTransaction to trigger confirmation modal
   const handleDelete = (id) => {
-    dispatch({ type: 'DELETE_TRANSACTION', payload: id });
+    onDeleteTransaction(id);
     setOpenMenuId(null);
   };
 

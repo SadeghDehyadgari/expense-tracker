@@ -1,7 +1,7 @@
-import React from 'react';
 import './Modal.css';
 
-const Modal = ({ title, children, onClose }) => {
+// MODIFIED: Added className prop to allow custom styling for specific modals
+const Modal = ({ title, children, onClose, className }) => {
   const handleClose = () => {
     onClose();
   };
@@ -12,7 +12,8 @@ const Modal = ({ title, children, onClose }) => {
 
   return (
     <div className="modal-overlay" onClick={handleClose}>
-      <div className="modal-content" onClick={handleContentClick}>
+      {/* MODIFIED: className applied conditionally */}
+      <div className={`modal-content ${className || ''}`} onClick={handleContentClick}>
         <div className="modal-handle"></div>
 
         <div className="modal-header">
