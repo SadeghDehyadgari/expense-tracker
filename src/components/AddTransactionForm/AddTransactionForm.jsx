@@ -5,6 +5,8 @@ import '@amir04lm26/react-modern-calendar-date-picker/lib/DatePicker.css';
 import CalendarIcon from '../../assets/Outline/Calendar.svg';
 import { toEnglishDigits } from '../../utils/formatters';
 import { parseDateString } from '../../utils/jalaliDateUtils';
+// ADDED: import validation helper to remove duplicated amount validation
+import { getAmountError } from '../../utils/validators';
 import './AddTransactionForm.css';
 
 const AddTransactionForm = ({ onCancel, mode = 'add', initialData = null }) => {
@@ -47,12 +49,8 @@ const AddTransactionForm = ({ onCancel, mode = 'add', initialData = null }) => {
       const processedValue = toEnglishDigits(value);
       setFormData((prev) => ({ ...prev, amount: processedValue }));
 
-      const numValue = Number(processedValue);
-      if (processedValue && (numValue <= 0 || isNaN(numValue))) {
-        setAmountError('مبلغ باید بزرگتر از صفر باشد');
-      } else {
-        setAmountError('');
-      }
+      // REPLACED: inline validation with shared utility
+      setAmountError(getAmountError(processedValue));
       return;
     }
 
@@ -85,11 +83,23 @@ const AddTransactionForm = ({ onCancel, mode = 'add', initialData = null }) => {
       return;
     }
 
-    const amountNum = Number(formData.amount);
-    if (!formData.amount || amountNum <= 0 || isNaN(amountNum)) {
+    // ADDED: clear existing amount error before re-validation
+    setAmountError('');
+
+    // Still perform required check separately
+    if (!formData.amount) {
       setAmountError('مبلغ باید بزرگتر از صفر باشد');
       return;
     }
+
+    // REPLACED: duplicated numeric validation with shared utility
+    const amountErrorMsg = getAmountError(formData.amount);
+    if (amountErrorMsg) {
+      setAmountError(amountErrorMsg);
+      return;
+    }
+
+    const amountNum = Number(formData.amount);
 
     const transactionData = {
       date: formData.date,
@@ -116,7 +126,7 @@ const AddTransactionForm = ({ onCancel, mode = 'add', initialData = null }) => {
   const submitLabel = mode === 'edit' ? 'ویرایش' : 'ثبت';
 
   return (
-    <form className="transaction-form" onSubmit={handleSubmit}>
+    <form className="transaction-form" onSubmit={handleSubmit} noValidate>
       <div className="form-group">
         <label htmlFor="date" className="form-label">
           تاریخ
