@@ -8,20 +8,84 @@ import {
 } from '../utils/jalaliDateUtils';
 
 const useTransactionStats = (filteredTransactions, timeRange, effectiveMonth, chartRange) => {
-  const totals = useMemo(() => {
-    let income = 0,
-      expense = 0;
-    filteredTransactions.forEach((t) => {
+  // 🔽 NEW: Filter transactions based on chartRange when timeRange is 'overall'.
+  // This ensures totals, pieData, and bar chart all reflect the same subset.
+  const effectiveTransactions = useMemo(() => {
+    if (timeRange !== 'overall' || chartRange === 'all') {
+      return filteredTransactions;
+    }
+    const { year: currentYear } = getCurrentJalaliInfo();
+    if (chartRange === 'currentYear') {
+      return filteredTransactions.filter((t) => t.date && getYear(t.date) === currentYear);
+    }
+    if (chartRange === 'last12Months') {
+      const last12 = last12MonthsList();
+      return filteredTransactions.filter((t) => t.date && last12.includes(getYearMonth(t.date)));
+    }
+    return filteredTransactions;
+  }, [filteredTransactions, timeRange, chartRange]);
+  // 🔼 END NEW
+
+  // 🔽 PERFORMANCE OPTIMIZATION: Compute totals and chart data in a single pass
+  // Previously totals and baseChartData were computed in separate useMemos,
+  // causing two iterations over effectiveTransactions. Now merged into one.
+  const { totals, chartData } = useMemo(() => {
+    let income = 0;
+    let expense = 0;
+
+    // For daily/monthly grouping
+    const dataMap = new Map();
+
+    effectiveTransactions.forEach((t) => {
+      if (!t.date) return;
+
+      // Totals accumulation
       if (t.income) income += t.income;
       if (t.expense) expense += t.expense;
+
+      // Chart data accumulation
+      if (timeRange === 'month' && effectiveMonth) {
+        const day = getDay(t.date);
+        if (!dataMap.has(day)) {
+          dataMap.set(day, { day, income: 0, expense: 0 });
+        }
+        const entry = dataMap.get(day);
+        if (t.income) entry.income += t.income;
+        if (t.expense) entry.expense += t.expense;
+      } else {
+        const yearMonth = getYearMonth(t.date);
+        if (!dataMap.has(yearMonth)) {
+          dataMap.set(yearMonth, { month: yearMonth, income: 0, expense: 0 });
+        }
+        const entry = dataMap.get(yearMonth);
+        if (t.income) entry.income += t.income;
+        if (t.expense) entry.expense += t.expense;
+      }
     });
-    return {
+
+    const totalsResult = {
       totalIncome: income,
       totalExpense: expense,
       balance: income - expense,
     };
-  }, [filteredTransactions]);
 
+    // Build chart data from map
+    let chartDataResult = [];
+    if (effectiveTransactions.length > 0) {
+      if (timeRange === 'month' && effectiveMonth) {
+        chartDataResult = Array.from(dataMap.values()).sort((a, b) => a.day - b.day);
+      } else {
+        chartDataResult = Array.from(dataMap.values()).sort((a, b) =>
+          a.month.localeCompare(b.month)
+        );
+      }
+    }
+
+    return { totals: totalsResult, chartData: chartDataResult };
+  }, [effectiveTransactions, timeRange, effectiveMonth]);
+  // 🔼 END PERFORMANCE OPTIMIZATION
+
+  // pieData derived from totals (unchanged)
   const pieData = useMemo(() => {
     const data = [];
     if (totals.totalIncome > 0)
@@ -30,55 +94,6 @@ const useTransactionStats = (filteredTransactions, timeRange, effectiveMonth, ch
       data.push({ name: 'هزینه', value: totals.totalExpense, color: '#ef4e4e' });
     return data;
   }, [totals]);
-
-  const baseChartData = useMemo(() => {
-    if (filteredTransactions.length === 0) return [];
-    if (timeRange === 'month' && effectiveMonth) {
-      const dailyMap = new Map();
-      filteredTransactions.forEach((t) => {
-        if (!t.date) return;
-        const day = getDay(t.date);
-        if (!dailyMap.has(day)) {
-          dailyMap.set(day, { day, income: 0, expense: 0 });
-        }
-        const entry = dailyMap.get(day);
-        if (t.income) entry.income += t.income;
-        if (t.expense) entry.expense += t.expense;
-      });
-      return Array.from(dailyMap.values()).sort((a, b) => a.day - b.day);
-    } else {
-      const monthlyMap = new Map();
-      filteredTransactions.forEach((t) => {
-        if (!t.date) return;
-        const yearMonth = getYearMonth(t.date);
-        if (!monthlyMap.has(yearMonth)) {
-          monthlyMap.set(yearMonth, { month: yearMonth, income: 0, expense: 0 });
-        }
-        const entry = monthlyMap.get(yearMonth);
-        if (t.income) entry.income += t.income;
-        if (t.expense) entry.expense += t.expense;
-      });
-      return Array.from(monthlyMap.values()).sort((a, b) => a.month.localeCompare(b.month));
-    }
-  }, [filteredTransactions, timeRange, effectiveMonth]);
-
-  const chartData = useMemo(() => {
-    if (timeRange !== 'overall') {
-      return baseChartData;
-    }
-    if (chartRange === 'all') {
-      return baseChartData;
-    }
-    const { year: currentYear } = getCurrentJalaliInfo();
-    if (chartRange === 'currentYear') {
-      return baseChartData.filter((item) => item.month && getYear(item.month) === currentYear);
-    }
-    if (chartRange === 'last12Months') {
-      const last12 = last12MonthsList();
-      return baseChartData.filter((item) => item.month && last12.includes(item.month));
-    }
-    return baseChartData;
-  }, [baseChartData, chartRange, timeRange]);
 
   return { totals, pieData, chartData };
 };
