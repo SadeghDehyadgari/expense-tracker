@@ -1,5 +1,3 @@
-/* Expenses.jsx */
-
 import { useState, useContext, useRef, useEffect } from 'react'; // ADDED: useRef, useEffect for focus management
 import TransactionTable from '../../components/TransactionTable/TransactionTable';
 import Modal from '../../components/Modal/Modal';

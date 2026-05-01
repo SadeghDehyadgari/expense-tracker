@@ -81,3 +81,11 @@ export const formatMonthNumeric = (yearMonth) => {
 };
 
 export const formatDayLabel = (day) => toPersianDigits(day);
+
+// NEW: Truncates a string to a maximum number of words, appending an ellipsis if needed.
+export const truncateWords = (text, maxWords) => {
+  if (!text) return '';
+  const words = text.split(' ');
+  if (words.length <= maxWords) return text;
+  return words.slice(0, maxWords).join(' ') + '...';
+};

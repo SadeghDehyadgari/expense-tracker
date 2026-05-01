@@ -104,6 +104,7 @@
 .cell-description {
   font-weight: var(--font-weight-regular);
   color: var(--neutrals-dark-2);
+  position: relative; /* NEW: enable absolute positioning context if needed */
 }
 
 .header-actions {
@@ -192,7 +193,6 @@
 }
 
 /* --- Added for kebab menu dropdown --- */
-/* Kebab button styling */
 .kebab-button {
   background: none;
   border: none;
@@ -216,7 +216,6 @@
   transform: scale(0.95);
 }
 
-/* Dropdown container */
 .dropdown-menu {
   position: absolute;
   top: 80%;
@@ -236,7 +235,6 @@
   z-index: 100;
 }
 
-/* Individual dropdown items */
 .dropdown-item {
   display: flex;
   align-items: center;
@@ -254,7 +252,7 @@
 }
 
 .dropdown-item:hover {
-  background-color: var(--neutrals-soft-grey-3); /* Light hover effect */
+  background-color: var(--neutrals-soft-grey-3);
 }
 
 .dropdown-item-icon {
@@ -268,10 +266,47 @@
 .dropdown-menu-above.dropdown-menu {
   top: auto;
   bottom: 80%;
-  margin-bottom: 0.25rem; /* A little space above the button */
+  margin-bottom: 0.25rem;
   transform: translateX(60%);
 }
 
+/* NEW: Tooltip styles */
+.description-text.has-tooltip {
+  cursor: pointer;
+}
+
+.description-tooltip {
+  position: fixed; /* Use fixed to avoid scroll container clipping */
+  transform: translateX(-50%); /* Center horizontally relative to the trigger */
+  max-width: 280px;
+  background: var(--neutrals-dark-2);
+  color: var(--neutrals-white);
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem;
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  z-index: 200;
+  pointer-events: none; /* Allows clicks to pass through */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  word-break: break-word;
+}
+
+/* Arrow for tooltip (optional) */
+.description-tooltip::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 6px solid var(--neutrals-dark-2);
+}
+
+/* MOBILE adjustments */
 @media (max-width: 768px) {
   .table-container {
     width: 100%;
@@ -400,5 +435,11 @@
 
   .dropdown-menu-above.dropdown-menu {
     transform: translateX(0);
+  }
+
+  /* NEW: Larger tooltip on mobile */
+  .description-tooltip {
+    max-width: 90vw;
+    font-size: 0.875rem;
   }
 }
