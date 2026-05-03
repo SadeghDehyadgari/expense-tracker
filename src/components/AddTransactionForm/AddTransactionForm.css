@@ -190,6 +190,23 @@
   font-size: 0.6rem !important;
 }
 
+/* NEW: disabled state for submit button */
+.submit-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: var(--neutrals-soft-grey-1);
+  color: var(--neutrals-dark-2);
+}
+
+/* NEW: server error message below the form actions */
+.server-error {
+  font-family: var(--font-family);
+  font-size: 0.875rem;
+  color: var(--system-red);
+  text-align: center;
+  margin-top: 0.5rem;
+}
+
 @media (max-width: 768px) {
   .form-actions {
     justify-content: space-between;

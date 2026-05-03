@@ -10,7 +10,8 @@ import { getAmountError } from '../../utils/validators';
 import './AddTransactionForm.css';
 
 const AddTransactionForm = ({ onCancel, mode = 'add', initialData = null }) => {
-  const { dispatch } = useContext(TransactionContext);
+  // CHANGED: use async functions from context instead of dispatch
+  const { addTransaction, editTransaction } = useContext(TransactionContext);
 
   // --- Initialize form data based on mode and initialData ---
   const getInitialFormData = () => {
@@ -30,6 +31,10 @@ const AddTransactionForm = ({ onCancel, mode = 'add', initialData = null }) => {
   const [formData, setFormData] = useState(getInitialFormData);
   const [dateError, setDateError] = useState('');
   const [amountError, setAmountError] = useState('');
+
+  // ADDED: local state for server-side errors and submission loading
+  const [serverError, setServerError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   // Initialize selectedDayObj from initialData's date string using the utility
   const [selectedDayObj, setSelectedDayObj] = useState(() => {
@@ -75,13 +80,20 @@ const AddTransactionForm = ({ onCancel, mode = 'add', initialData = null }) => {
     setFormData((prev) => ({ ...prev, type: e.target.value }));
   };
 
-  const handleSubmit = (e) => {
+  // CHANGED: async submission using context functions
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Prevent duplicate submissions
+    if (submitting) return;
 
     if (!formData.date) {
       setDateError('لطفاً تاریخ را انتخاب کنید');
       return;
     }
+
+    // Clear any previous server error when attempting to submit
+    setServerError('');
 
     // ADDED: clear existing amount error before re-validation
     setAmountError('');
@@ -108,19 +120,22 @@ const AddTransactionForm = ({ onCancel, mode = 'add', initialData = null }) => {
       expense: formData.type === 'expense' ? amountNum : 0,
     };
 
-    if (mode === 'edit' && initialData?.id) {
-      dispatch({
-        type: 'EDIT_TRANSACTION',
-        payload: {
-          id: initialData.id,
-          updatedData: transactionData,
-        },
-      });
-    } else {
-      dispatch({ type: 'ADD_TRANSACTION', payload: transactionData });
+    // Start submission
+    setSubmitting(true);
+    try {
+      if (mode === 'edit' && initialData?.id) {
+        await editTransaction(initialData.id, transactionData);
+      } else {
+        await addTransaction(transactionData);
+      }
+      // On success, close the form (modal)
+      onCancel();
+    } catch (err) {
+      // Show server error message below the form
+      setServerError(err.message || 'خطایی در ارتباط با سرور رخ داد');
+    } finally {
+      setSubmitting(false);
     }
-
-    onCancel();
   };
 
   const submitLabel = mode === 'edit' ? 'ویرایش' : 'ثبت';
@@ -243,10 +258,14 @@ const AddTransactionForm = ({ onCancel, mode = 'add', initialData = null }) => {
         <button type="button" className="cancel-button" onClick={onCancel}>
           انصراف
         </button>
-        <button type="submit" className="submit-button">
-          {submitLabel}
+        {/* CHANGED: button disabled during submission, shows loading text */}
+        <button type="submit" className="submit-button" disabled={submitting}>
+          {submitting ? 'در حال ارسال...' : submitLabel}
         </button>
       </div>
+
+      {/* ADDED: display server error after buttons */}
+      {serverError && <div className="server-error">{serverError}</div>}
     </form>
   );
 };
