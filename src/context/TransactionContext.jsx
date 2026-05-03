@@ -50,8 +50,9 @@ export const TransactionProvider = ({ children }) => {
         setTransactions((prev) => [newTransaction, ...prev]);
         return { success: true };
       } catch (err) {
-        // CHANGED: use err.message directly
-        showErrorToast(err.message);
+        // CHANGED: Always show the Persian error message for add operation,
+        // even if the actual error is network failure (e.g., "Failed to fetch").
+        showErrorToast('خطا در افزودن تراکنش');
         return { success: false, error: err.message };
       }
     },
@@ -74,8 +75,8 @@ export const TransactionProvider = ({ children }) => {
         );
         return { success: true };
       } catch (err) {
-        // CHANGED: use err.message directly
-        showErrorToast(err.message);
+        // CHANGED: Always show Persian error message for edit operation.
+        showErrorToast('خطا در ویرایش تراکنش');
         return { success: false, error: err.message };
       }
     },
@@ -93,8 +94,8 @@ export const TransactionProvider = ({ children }) => {
         setTransactions((prev) => prev.filter((t) => t.id !== id));
         return { success: true };
       } catch (err) {
-        // CHANGED: use err.message directly
-        showErrorToast(err.message);
+        // CHANGED: Always show Persian error message for delete operation.
+        showErrorToast('خطا در حذف تراکنش');
         return { success: false, error: err.message };
       }
     },

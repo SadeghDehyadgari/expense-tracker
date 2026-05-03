@@ -1,4 +1,12 @@
 {
-  "transactions": [],
+  "transactions": [
+    {
+      "date": "1405/02/02",
+      "description": "تست",
+      "income": 22,
+      "expense": 0,
+      "id": "oWlAqpr4yLI"
+    }
+  ],
   "$schema": "./node_modules/json-server/schema.json"
 }
