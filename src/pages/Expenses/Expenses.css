@@ -37,6 +37,22 @@
   display: none;
 }
 
+/* ADDED: style for disabled button state (reuses existing buttons) */
+.cancel-button:disabled,
+.delete-confirm-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ADDED: error message inside delete confirmation modal */
+.delete-error-message {
+  color: var(--system-red);
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  /* Ensure proper RTL alignment */
+  text-align: center;
+}
+
 @media (max-width: 768px) {
   .expenses-page {
     padding: 1rem;

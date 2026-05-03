@@ -1,4 +1,4 @@
-import { useState, useContext, useRef, useEffect } from 'react'; // ADDED: useRef, useEffect for focus management
+import { useState, useContext, useRef, useEffect } from 'react';
 import TransactionTable from '../../components/TransactionTable/TransactionTable';
 import Modal from '../../components/Modal/Modal';
 import AddTransactionForm from '../../components/AddTransactionForm/AddTransactionForm';
@@ -15,7 +15,12 @@ function Expenses() {
     transactionId: null,
   });
 
-  const { dispatch } = useContext(TransactionContext);
+  // ADDED: local loading & error states for delete operation
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
+
+  // CHANGED: use deleteTransaction async function from context instead of dispatch
+  const { deleteTransaction } = useContext(TransactionContext);
 
   // ADDED: ref for auto-focus on delete button
   const deleteButtonRef = useRef(null);
@@ -43,16 +48,31 @@ function Expenses() {
   };
 
   const handleDeleteClick = (transactionId) => {
+    // Reset delete error whenever a new confirmation is shown
+    setDeleteError(null);
     setDeleteConfirmation({ show: true, transactionId });
   };
 
-  const handleConfirmDelete = () => {
-    dispatch({ type: 'DELETE_TRANSACTION', payload: deleteConfirmation.transactionId });
-    setDeleteConfirmation({ show: false, transactionId: null });
+  // REWORKED: now uses async deleteTransaction with local loading/error handling
+  const handleConfirmDelete = async () => {
+    setDeleting(true);
+    setDeleteError(null);
+
+    try {
+      await deleteTransaction(deleteConfirmation.transactionId);
+      // Success: close modal and reset confirmation
+      setDeleteConfirmation({ show: false, transactionId: null });
+    } catch (error) {
+      // Handle error – display message to user
+      setDeleteError(error.message || 'خطا در حذف تراکنش. لطفاً دوباره تلاش کنید.');
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const handleCancelDelete = () => {
     setDeleteConfirmation({ show: false, transactionId: null });
+    setDeleteError(null);
   };
 
   return (
@@ -76,20 +96,29 @@ function Expenses() {
         </Modal>
       )}
 
-      {/* ADDED: delete confirmation modal with className and auto-focus */}
+      {/* ADDED: delete confirmation modal with className, auto-focus, loading & error display */}
       {deleteConfirmation.show && (
         <Modal title="" onClose={handleCancelDelete} className="delete-confirmation-modal">
           <p>آیا از حذف تراکنش اطمینان دارید؟</p>
+
+          {/* ADDED: inline error message */}
+          {deleteError && (
+            <p className="delete-error-message" role="alert">
+              {deleteError}
+            </p>
+          )}
+
           <div className="delete-actions">
-            <button className="cancel-button" onClick={handleCancelDelete}>
+            <button className="cancel-button" onClick={handleCancelDelete} disabled={deleting}>
               انصراف
             </button>
             <button
               className="delete-confirm-button"
               onClick={handleConfirmDelete}
               ref={deleteButtonRef}
+              disabled={deleting}
             >
-              حذف
+              {deleting ? 'در حال حذف...' : 'حذف'}
             </button>
           </div>
         </Modal>

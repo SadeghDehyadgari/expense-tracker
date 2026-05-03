@@ -32,8 +32,8 @@ const COLORS = {
 };
 
 const Dashboard = () => {
-  const { state } = useContext(TransactionContext);
-  const allTransactions = state.transactions;
+  // CHANGED: destructure transactions directly from context (old: const { state } = useContext(...); const allTransactions = state.transactions)
+  const { transactions: allTransactions } = useContext(TransactionContext);
 
   const { availableYears, availableMonths } = useAvailableDates(allTransactions);
 

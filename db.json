@@ -1,81 +1,25 @@
 {
   "transactions": [
     {
-      "id": "1",
-      "date": "1402/07/15",
-      "description": "پروژه اول طراحی سایت",
-      "income": 5000000,
-      "expense": 0
-    },
-    {
-      "id": "2",
-      "date": "1402/07/16",
-      "description": "خرید لوازم التحریر",
-      "income": 0,
-      "expense": 350000
-    },
-    {
-      "id": "3",
-      "date": "1402/07/17",
-      "description": "پروژه دوم",
-      "income": 2500000,
-      "expense": 0
-    },
-    {
-      "date": "1405/02/15",
-      "description": "های",
-      "income": 0,
-      "expense": 80000,
-      "id": "p5mtkSZIK_w"
-    },
-    {
-      "date": "1405/02/16",
-      "description": "بای 2",
-      "income": 0,
-      "expense": 900000,
-      "id": "1Qt5A_nBScY"
-    },
-    {
-      "date": "1405/02/09",
-      "description": "",
-      "income": 33333,
-      "expense": 0,
-      "id": "kO7sjP5ylg8"
-    },
-    {
-      "date": "1405/02/01",
+      "date": "1405/02/02",
       "description": "1",
-      "income": 10000,
-      "expense": 0,
-      "id": "9V5ZqGwCr34"
-    },
-    {
-      "date": "1405/02/01",
-      "description": "ئ",
-      "income": 1,
-      "expense": 0,
-      "id": "e0OF-DVmXCw"
-    },
-    {
-      "date": "1405/02/17",
-      "description": "ط",
-      "income": 2,
-      "expense": 0,
-      "id": "l7sMYS2ETn0"
-    },
-    {
-      "date": "1405/02/16",
-      "description": "1",
-      "income": 200,
-      "expense": 0,
-      "id": "r4g4XMtUIZU"
-    },
-    {
-      "date": "1405/02/21",
-      "description": "2",
       "income": 2000,
       "expense": 0,
-      "id": "hR1DHG-ZwOo"
+      "id": "razS-tnICVE"
+    },
+    {
+      "date": "1405/02/16",
+      "description": "3",
+      "income": 6000,
+      "expense": 0,
+      "id": "gilEcD6Huv0"
+    },
+    {
+      "date": "1405/03/11",
+      "description": "4",
+      "income": 0,
+      "expense": 20000,
+      "id": "W2DxqJvvkus"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"

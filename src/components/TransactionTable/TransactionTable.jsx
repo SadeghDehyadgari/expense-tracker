@@ -9,8 +9,8 @@ import EditSquareIcon from '../../assets/Outline/Edit Square.svg';
 import DangerCircleIcon from '../../assets/Outline/Danger Circle.svg';
 
 const TransactionTable = ({ onAddTransactionClick, onEditTransaction, onDeleteTransaction }) => {
-  const { state } = useContext(TransactionContext);
-  const transactions = state.transactions;
+  // CHANGED: destructure transactions directly from context (old: const { state } = useContext(...); transactions = state.transactions)
+  const { transactions } = useContext(TransactionContext);
   const isEmpty = transactions.length === 0;
 
   const [openMenuId, setOpenMenuId] = useState(null);
