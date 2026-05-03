@@ -15,11 +15,11 @@ function Expenses() {
     transactionId: null,
   });
 
-  // ADDED: local loading & error states for delete operation
+  // ADDED: local loading state for delete operation
   const [deleting, setDeleting] = useState(false);
-  const [deleteError, setDeleteError] = useState(null);
+  // REMOVED: deleteError state - errors now shown via toast
 
-  // CHANGED: use deleteTransaction async function from context instead of dispatch
+  // CHANGED: use deleteTransaction (now returns { success, error })
   const { deleteTransaction } = useContext(TransactionContext);
 
   // ADDED: ref for auto-focus on delete button
@@ -48,31 +48,23 @@ function Expenses() {
   };
 
   const handleDeleteClick = (transactionId) => {
-    // Reset delete error whenever a new confirmation is shown
-    setDeleteError(null);
     setDeleteConfirmation({ show: true, transactionId });
   };
 
-  // REWORKED: now uses async deleteTransaction with local loading/error handling
+  // CHANGED: handle returned result instead of try/catch
   const handleConfirmDelete = async () => {
     setDeleting(true);
-    setDeleteError(null);
-
-    try {
-      await deleteTransaction(deleteConfirmation.transactionId);
+    const result = await deleteTransaction(deleteConfirmation.transactionId);
+    if (result.success) {
       // Success: close modal and reset confirmation
       setDeleteConfirmation({ show: false, transactionId: null });
-    } catch (error) {
-      // Handle error – display message to user
-      setDeleteError(error.message || 'خطا در حذف تراکنش. لطفاً دوباره تلاش کنید.');
-    } finally {
-      setDeleting(false);
     }
+    // On error, toast already shown, just stop loading indicator
+    setDeleting(false);
   };
 
   const handleCancelDelete = () => {
     setDeleteConfirmation({ show: false, transactionId: null });
-    setDeleteError(null);
   };
 
   return (
@@ -96,18 +88,10 @@ function Expenses() {
         </Modal>
       )}
 
-      {/* ADDED: delete confirmation modal with className, auto-focus, loading & error display */}
       {deleteConfirmation.show && (
         <Modal title="" onClose={handleCancelDelete} className="delete-confirmation-modal">
           <p>آیا از حذف تراکنش اطمینان دارید؟</p>
-
-          {/* ADDED: inline error message */}
-          {deleteError && (
-            <p className="delete-error-message" role="alert">
-              {deleteError}
-            </p>
-          )}
-
+          {/* REMOVED: inline error message, now handled by global toast */}
           <div className="delete-actions">
             <button className="cancel-button" onClick={handleCancelDelete} disabled={deleting}>
               انصراف

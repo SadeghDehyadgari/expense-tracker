@@ -14,5 +14,13 @@ export default defineConfig({
   ],
   server: {
     host: true,
+    // NEW: proxy configuration to avoid localhost issues on mobile devices
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+    },
   },
 });

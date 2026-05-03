@@ -10,7 +10,7 @@ import { getAmountError } from '../../utils/validators';
 import './AddTransactionForm.css';
 
 const AddTransactionForm = ({ onCancel, mode = 'add', initialData = null }) => {
-  // CHANGED: use async functions from context instead of dispatch
+  // CHANGED: use async functions from context (they now return { success, error })
   const { addTransaction, editTransaction } = useContext(TransactionContext);
 
   // --- Initialize form data based on mode and initialData ---
@@ -32,9 +32,9 @@ const AddTransactionForm = ({ onCancel, mode = 'add', initialData = null }) => {
   const [dateError, setDateError] = useState('');
   const [amountError, setAmountError] = useState('');
 
-  // ADDED: local state for server-side errors and submission loading
-  const [serverError, setServerError] = useState('');
+  // ADDED: local state for submission loading
   const [submitting, setSubmitting] = useState(false);
+  // REMOVED: serverError state - errors now shown via toast
 
   // Initialize selectedDayObj from initialData's date string using the utility
   const [selectedDayObj, setSelectedDayObj] = useState(() => {
@@ -80,11 +80,10 @@ const AddTransactionForm = ({ onCancel, mode = 'add', initialData = null }) => {
     setFormData((prev) => ({ ...prev, type: e.target.value }));
   };
 
-  // CHANGED: async submission using context functions
+  // CHANGED: handle returned result instead of try/catch with throw
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Prevent duplicate submissions
     if (submitting) return;
 
     if (!formData.date) {
@@ -92,19 +91,12 @@ const AddTransactionForm = ({ onCancel, mode = 'add', initialData = null }) => {
       return;
     }
 
-    // Clear any previous server error when attempting to submit
-    setServerError('');
-
-    // ADDED: clear existing amount error before re-validation
     setAmountError('');
-
-    // Still perform required check separately
     if (!formData.amount) {
       setAmountError('مبلغ باید بزرگتر از صفر باشد');
       return;
     }
 
-    // REPLACED: duplicated numeric validation with shared utility
     const amountErrorMsg = getAmountError(formData.amount);
     if (amountErrorMsg) {
       setAmountError(amountErrorMsg);
@@ -112,7 +104,6 @@ const AddTransactionForm = ({ onCancel, mode = 'add', initialData = null }) => {
     }
 
     const amountNum = Number(formData.amount);
-
     const transactionData = {
       date: formData.date,
       description: formData.description,
@@ -120,21 +111,25 @@ const AddTransactionForm = ({ onCancel, mode = 'add', initialData = null }) => {
       expense: formData.type === 'expense' ? amountNum : 0,
     };
 
-    // Start submission
     setSubmitting(true);
+    let result;
     try {
       if (mode === 'edit' && initialData?.id) {
-        await editTransaction(initialData.id, transactionData);
+        result = await editTransaction(initialData.id, transactionData);
       } else {
-        await addTransaction(transactionData);
+        result = await addTransaction(transactionData);
       }
-      // On success, close the form (modal)
+    } catch {
+      // This catch should never fire because context functions no longer throw
+    }
+
+    // CHANGED: close modal only if operation succeeded
+    if (result.success) {
       onCancel();
-    } catch (err) {
-      // Show server error message below the form
-      setServerError(err.message || 'خطایی در ارتباط با سرور رخ داد');
-    } finally {
+    } else {
+      // Error toast already shown by context, just re-enable submit button
       setSubmitting(false);
+      // Modal stays open, form data remains unchanged
     }
   };
 
@@ -260,14 +255,13 @@ const AddTransactionForm = ({ onCancel, mode = 'add', initialData = null }) => {
         <button type="button" className="cancel-button" onClick={onCancel}>
           انصراف
         </button>
-        {/* CHANGED: button disabled during submission, shows loading text */}
+        {/* CHANGED: button disabled during submission */}
         <button type="submit" className="submit-button" disabled={submitting}>
           {submitting ? 'در حال ارسال...' : submitLabel}
         </button>
       </div>
 
-      {/* ADDED: display server error after buttons */}
-      {serverError && <div className="server-error">{serverError}</div>}
+      {/* REMOVED: server-error div – errors are now shown via toast */}
     </form>
   );
 };
