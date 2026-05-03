@@ -1,7 +1,7 @@
 import { useContext, useState, useEffect, useRef } from 'react';
 import TransactionContext from '../../context/TransactionContext';
-import { toPersianDigits, formatNumber, truncateWords } from '../../utils/formatters'; // MODIFIED: added truncateWords
-import { useTooltip } from '../../hooks/useTooltip'; // NEW: custom tooltip hook
+import { toPersianDigits, formatNumber, truncateWords } from '../../utils/formatters';
+import { useTooltip } from '../../hooks/useTooltip';
 import './TransactionTable.css';
 import PlusIcon from '../../assets/Outline/Plus.svg';
 import DeleteIcon from '../../assets/Outline/Delete.svg';
@@ -9,8 +9,8 @@ import EditSquareIcon from '../../assets/Outline/Edit Square.svg';
 import DangerCircleIcon from '../../assets/Outline/Danger Circle.svg';
 
 const TransactionTable = ({ onAddTransactionClick, onEditTransaction, onDeleteTransaction }) => {
-  // CHANGED: destructure transactions directly from context (old: const { state } = useContext(...); transactions = state.transactions)
-  const { transactions } = useContext(TransactionContext);
+  // CHANGED: destructure transactions, loading, error, and fetchTransactions from context
+  const { transactions, loading, error, fetchTransactions } = useContext(TransactionContext);
   const isEmpty = transactions.length === 0;
 
   const [openMenuId, setOpenMenuId] = useState(null);
@@ -18,7 +18,7 @@ const TransactionTable = ({ onAddTransactionClick, onEditTransaction, onDeleteTr
   const menuRef = useRef(null);
   const buttonRefs = useRef({});
 
-  // NEW: Tooltip logic extracted to a custom hook
+  // Tooltip logic (unchanged)
   const {
     tooltip,
     triggerRef: tooltipTriggerRef,
@@ -28,7 +28,7 @@ const TransactionTable = ({ onAddTransactionClick, onEditTransaction, onDeleteTr
     handleClick: tooltipClick,
   } = useTooltip();
 
-  // MODIFIED: Merged close-handler for both dropdown and tooltip
+  // Merge close-handler for dropdown and tooltip (unchanged)
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (openMenuId !== null && menuRef.current && !menuRef.current.contains(event.target)) {
@@ -52,7 +52,7 @@ const TransactionTable = ({ onAddTransactionClick, onEditTransaction, onDeleteTr
     };
   }, [openMenuId, tooltip.visible, hideTooltip, tooltipTriggerRef]);
 
-  // Flip dropdown direction if it overflows the scroll container
+  // Flip dropdown direction (unchanged)
   useEffect(() => {
     if (openMenuId === null || !menuRef.current) {
       return;
@@ -75,7 +75,7 @@ const TransactionTable = ({ onAddTransactionClick, onEditTransaction, onDeleteTr
     return () => cancelAnimationFrame(timer);
   }, [openMenuId]);
 
-  // NEW: Hide tooltip on any scroll to prevent misalignment
+  // Hide tooltip on scroll (unchanged)
   useEffect(() => {
     if (!tooltip.visible) return;
 
@@ -107,6 +107,48 @@ const TransactionTable = ({ onAddTransactionClick, onEditTransaction, onDeleteTr
     </svg>
   );
 
+  // NEW: Render loading state
+  if (loading) {
+    return (
+      <div className="table-container">
+        <div className="table-header">
+          <h2 className="table-title">تراکنش‌ها</h2>
+          <button className="add-transaction-button" onClick={onAddTransactionClick}>
+            <img src={PlusIcon} alt="Plus" className="button-icon" />
+            افزودن تراکنش
+          </button>
+        </div>
+        <div className="table-content">
+          <p className="loading-text">در حال بارگذاری تراکنش‌ها...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // NEW: Render error state
+  if (error) {
+    return (
+      <div className="table-container">
+        <div className="table-header">
+          <h2 className="table-title">تراکنش‌ها</h2>
+          <button className="add-transaction-button" onClick={onAddTransactionClick}>
+            <img src={PlusIcon} alt="Plus" className="button-icon" />
+            افزودن تراکنش
+          </button>
+        </div>
+        <div className="table-content">
+          <div className="error-state">
+            <p className="error-message">{error}</p>
+            <button className="retry-button" onClick={() => fetchTransactions()}>
+              تلاش مجدد
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Normal rendering (unchanged from here, except added loading/error handling above)
   return (
     <div className="table-container">
       <div className="table-header">
@@ -136,7 +178,7 @@ const TransactionTable = ({ onAddTransactionClick, onEditTransaction, onDeleteTr
             </thead>
             <tbody>
               {transactions.map((transaction) => {
-                const truncatedDesc = truncateWords(transaction.description, 5); // changed from 10 to 5
+                const truncatedDesc = truncateWords(transaction.description, 5);
                 const hasMoreWords =
                   transaction.description && transaction.description.split(' ').length > 5;
 
@@ -159,11 +201,9 @@ const TransactionTable = ({ onAddTransactionClick, onEditTransaction, onDeleteTr
                         </>
                       ) : null}
                     </td>
-                    {/* MODIFIED: Description cell with tooltip trigger */}
                     <td className="cell-description">
                       {transaction.description ? (
                         hasMoreWords ? (
-                          // Long description: attach tooltip handlers
                           <span
                             className="description-text has-tooltip"
                             onClick={tooltipClick(transaction.description)}
@@ -179,7 +219,6 @@ const TransactionTable = ({ onAddTransactionClick, onEditTransaction, onDeleteTr
                             {truncatedDesc}
                           </span>
                         ) : (
-                          // Short description: no tooltip, plain span
                           <span className="description-text" aria-label={transaction.description}>
                             {truncatedDesc}
                           </span>
@@ -227,7 +266,7 @@ const TransactionTable = ({ onAddTransactionClick, onEditTransaction, onDeleteTr
         )}
       </div>
 
-      {/* NEW: Tooltip portal */}
+      {/* Tooltip portal (unchanged) */}
       {tooltip.visible && (
         <div
           id={`tooltip-${tooltip.text.replace(/\s/g, '')}`}

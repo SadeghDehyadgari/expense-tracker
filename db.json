@@ -20,6 +20,13 @@
       "income": 0,
       "expense": 20000,
       "id": "W2DxqJvvkus"
+    },
+    {
+      "date": "1405/02/23",
+      "description": "شب",
+      "income": 1000,
+      "expense": 0,
+      "id": "Q96jcVWsrU8"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"

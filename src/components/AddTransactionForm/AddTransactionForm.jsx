@@ -181,7 +181,8 @@ const AddTransactionForm = ({ onCancel, mode = 'add', initialData = null }) => {
                   style={{ cursor: 'pointer' }}
                   title="انتخاب تاریخ"
                 />
-                {dateError && <div className="error-message">{dateError}</div>}
+                {/* UPDATED: className changed to form-error-message for clarity */}
+                {dateError && <div className="form-error-message">{dateError}</div>}
               </>
             )}
           />
@@ -204,7 +205,8 @@ const AddTransactionForm = ({ onCancel, mode = 'add', initialData = null }) => {
             dir="rtl"
             min="0"
           />
-          {amountError && <div className="error-message">{amountError}</div>}
+          {/* UPDATED: className changed to form-error-message */}
+          {amountError && <div className="form-error-message">{amountError}</div>}
         </div>
       </div>
 

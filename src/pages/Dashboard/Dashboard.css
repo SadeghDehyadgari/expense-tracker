@@ -236,6 +236,46 @@
   cursor: pointer;
 }
 
+/* NEW: Loading & error states for Dashboard */
+.loading-text {
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  color: var(--neutrals-grey-1);
+  text-align: center;
+  padding: 3rem;
+}
+
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 3rem;
+  width: 100%;
+}
+
+.retry-button {
+  background-color: var(--primary-brand);
+  color: var(--neutrals-white);
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1.5rem;
+  font-family: var(--font-family);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.retry-button:hover {
+  background-color: var(--primary-dark);
+}
+
+.retry-button:active {
+  transform: scale(0.98);
+}
+
 @media (max-width: 768px) {
   .dashboard-page {
     padding: 1rem;

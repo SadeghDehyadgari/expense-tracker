@@ -61,7 +61,8 @@
   padding-left: 2.5rem;
 }
 
-.error-message {
+/* UPDATED: Renamed from .error-message to .form-error-message to avoid conflict with global error-message */
+.input-with-icon .form-error-message {
   position: absolute;
   top: 2.75rem;
   right: 0;
@@ -263,7 +264,8 @@
     padding-left: 2rem;
   }
 
-  .error-message {
+  /* UPDATED: Reference renamed to .form-error-message */
+  .input-with-icon .form-error-message {
     top: 2.5rem;
     font-size: 0.7rem;
   }

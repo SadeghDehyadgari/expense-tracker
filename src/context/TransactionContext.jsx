@@ -7,36 +7,34 @@ export const TransactionProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // ----- Initial fetch -----
-  useEffect(() => {
-    const abortController = new AbortController();
-
-    const loadTransactions = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await fetch('http://localhost:3000/transactions', {
-          signal: abortController.signal,
-        });
-        if (!res.ok) throw new Error('Failed to fetch');
-        const data = await res.json();
-        // reverse to make newest-first
-        data.reverse();
-        setTransactions(data);
-      } catch (err) {
-        if (err.name !== 'AbortError') {
-          setError(err.message);
-        }
-      } finally {
-        setLoading(false);
+  // NEW: Extract fetch logic into a reusable async function
+  const fetchTransactions = useCallback(async (signal) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('http://localhost:3000/transactions', { signal });
+      if (!res.ok) throw new Error('Failed to fetch');
+      const data = await res.json();
+      // reverse to make newest-first
+      data.reverse();
+      setTransactions(data);
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        setError(err.message);
       }
-    };
-
-    loadTransactions();
-    return () => abortController.abort();
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  // ----- Async actions (no reducer, functional setState) -----
+  // Initial fetch (reuses fetchTransactions)
+  useEffect(() => {
+    const abortController = new AbortController();
+    fetchTransactions(abortController.signal);
+    return () => abortController.abort();
+  }, [fetchTransactions]); // CHANGED: depend on fetchTransactions (stable reference)
+
+  // Async actions (unchanged)
   const addTransaction = useCallback(async (data) => {
     setError(null);
     try {
@@ -85,7 +83,7 @@ export const TransactionProvider = ({ children }) => {
     }
   }, []);
 
-  // ----- Memoised context value -----
+  // Memoised context value (NEW: include fetchTransactions)
   const contextValue = useMemo(
     () => ({
       transactions,
@@ -94,8 +92,17 @@ export const TransactionProvider = ({ children }) => {
       addTransaction,
       editTransaction,
       deleteTransaction,
+      fetchTransactions, // NEW
     }),
-    [transactions, loading, error, addTransaction, editTransaction, deleteTransaction]
+    [
+      transactions,
+      loading,
+      error,
+      addTransaction,
+      editTransaction,
+      deleteTransaction,
+      fetchTransactions,
+    ]
   );
 
   return <TransactionContext.Provider value={contextValue}>{children}</TransactionContext.Provider>;

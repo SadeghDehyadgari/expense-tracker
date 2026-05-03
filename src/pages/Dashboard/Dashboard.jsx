@@ -13,10 +13,10 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import TransactionContext from '../../context/TransactionContext';
-import useAvailableDates from '../../hooks/useAvailableDates'; // New
-import useTransactionFilters from '../../hooks/useTransactionFilters'; // New
-import useFilteredTransactions from '../../hooks/useFilteredTransactions'; // New
-import useTransactionStats from '../../hooks/useTransactionStats'; // New
+import useAvailableDates from '../../hooks/useAvailableDates';
+import useTransactionFilters from '../../hooks/useTransactionFilters';
+import useFilteredTransactions from '../../hooks/useFilteredTransactions';
+import useTransactionStats from '../../hooks/useTransactionStats';
 import {
   formatNumber,
   toPersianDigits,
@@ -32,9 +32,15 @@ const COLORS = {
 };
 
 const Dashboard = () => {
-  // CHANGED: destructure transactions directly from context (old: const { state } = useContext(...); const allTransactions = state.transactions)
-  const { transactions: allTransactions } = useContext(TransactionContext);
+  // CHANGED: destructure transactions, loading, error, and fetchTransactions from context
+  const {
+    transactions: allTransactions,
+    loading,
+    error,
+    fetchTransactions,
+  } = useContext(TransactionContext);
 
+  // All hooks (unchanged) but they will use allTransactions
   const { availableYears, availableMonths } = useAvailableDates(allTransactions);
 
   const { timeRange, effectiveYear, effectiveMonth, chartRange, setChartRange, handlers } =
@@ -78,6 +84,34 @@ const Dashboard = () => {
     );
   }, []);
 
+  // NEW: Loading state
+  if (loading) {
+    return (
+      <div className="dashboard-page">
+        <div className="dashboard-content">
+          <p className="loading-text">در حال بارگذاری داشبورد...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // NEW: Error state
+  if (error) {
+    return (
+      <div className="dashboard-page">
+        <div className="dashboard-content">
+          <div className="error-state">
+            <p className="error-message">{error}</p>
+            <button className="retry-button" onClick={() => fetchTransactions()}>
+              تلاش مجدد
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Normal rendering (unchanged except for the above conditions)
   if (allTransactions.length === 0) {
     return (
       <div className="dashboard-page">
