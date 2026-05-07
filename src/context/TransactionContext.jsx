@@ -1,40 +1,25 @@
-import { createContext, useState, useEffect, useCallback, useMemo } from 'react';
+import { createContext, useCallback, useMemo } from 'react';
 import { useToast } from '../hooks/useToast';
+// NEW: import useFetch hook to replace manual useState/useEffect fetching
+import useFetch from '../hooks/useFetch';
 
 const TransactionContext = createContext();
 
 export const TransactionProvider = ({ children }) => {
-  const [transactions, setTransactions] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const { showErrorToast } = useToast();
 
-  const fetchTransactions = useCallback(async (signal) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch('/api/transactions', { signal });
-      // CHANGED: throw Persian error message directly
-      if (!res.ok) throw new Error('خطا در ارتباط با سرور');
-      const data = await res.json();
-      data.reverse();
-      setTransactions(data);
-      setLoading(false);
-    } catch (err) {
-      if (err.name !== 'AbortError') {
-        // CHANGED: use err.message directly (already Persian)
-        setError(err.message);
-        setLoading(false);
-      }
-      // AbortError – do nothing
-    }
-  }, []);
+  // REFACTORED: all data fetching and state (loading, error, transactions) now handled by useFetch
+  const {
+    data: transactionsRaw,
+    loading,
+    error,
+    refetch: fetchTransactions,
+  } = useFetch('/api/transactions');
 
-  useEffect(() => {
-    const abortController = new AbortController();
-    fetchTransactions(abortController.signal);
-    return () => abortController.abort();
-  }, []);
+  // FIX: Ensure transactions is always an array (useFetch initially returns null).
+  // Memoize the fallback to prevent a new array reference on every render,
+  // which would otherwise cause the useMemo for contextValue to see a changed dependency each time.
+  const transactions = useMemo(() => transactionsRaw ?? [], [transactionsRaw]);
 
   const addTransaction = useCallback(
     async (data) => {
@@ -44,19 +29,19 @@ export const TransactionProvider = ({ children }) => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data),
         });
-        // CHANGED: Persian error message
+        // CHANGED: Persian error message (preserved)
         if (!res.ok) throw new Error('خطا در افزودن تراکنش');
-        const newTransaction = await res.json();
-        setTransactions((prev) => [newTransaction, ...prev]);
+        // NEW: after successful addition, silently refetch the whole list instead of manually updating state
+        await fetchTransactions();
         return { success: true };
       } catch (err) {
-        // CHANGED: Always show the Persian error message for add operation,
-        // even if the actual error is network failure (e.g., "Failed to fetch").
+        // CHANGED: Always show the Persian error message for add operation, even for network failures
         showErrorToast('خطا در افزودن تراکنش');
         return { success: false, error: err.message };
       }
     },
-    [showErrorToast]
+    // NEW: fetchTransactions added to dependency array
+    [showErrorToast, fetchTransactions]
   );
 
   const editTransaction = useCallback(
@@ -67,12 +52,10 @@ export const TransactionProvider = ({ children }) => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(updatedData),
         });
-        // CHANGED: Persian error message
+        // CHANGED: Persian error message (preserved)
         if (!res.ok) throw new Error('خطا در ویرایش تراکنش');
-        const updatedTransaction = await res.json();
-        setTransactions((prev) =>
-          prev.map((t) => (t.id === id ? { ...t, ...updatedTransaction } : t))
-        );
+        // NEW: silently refetch after successful edit
+        await fetchTransactions();
         return { success: true };
       } catch (err) {
         // CHANGED: Always show Persian error message for edit operation.
@@ -80,7 +63,7 @@ export const TransactionProvider = ({ children }) => {
         return { success: false, error: err.message };
       }
     },
-    [showErrorToast]
+    [showErrorToast, fetchTransactions]
   );
 
   const deleteTransaction = useCallback(
@@ -89,9 +72,10 @@ export const TransactionProvider = ({ children }) => {
         const res = await fetch(`/api/transactions/${id}`, {
           method: 'DELETE',
         });
-        // CHANGED: Persian error message
+        // CHANGED: Persian error message (preserved)
         if (!res.ok) throw new Error('خطا در حذف تراکنش');
-        setTransactions((prev) => prev.filter((t) => t.id !== id));
+        // NEW: silently refetch after successful delete
+        await fetchTransactions();
         return { success: true };
       } catch (err) {
         // CHANGED: Always show Persian error message for delete operation.
@@ -99,7 +83,7 @@ export const TransactionProvider = ({ children }) => {
         return { success: false, error: err.message };
       }
     },
-    [showErrorToast]
+    [showErrorToast, fetchTransactions]
   );
 
   const contextValue = useMemo(
