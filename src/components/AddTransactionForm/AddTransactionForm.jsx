@@ -5,13 +5,15 @@ import '@amir04lm26/react-modern-calendar-date-picker/lib/DatePicker.css';
 import CalendarIcon from '../../assets/Outline/Calendar.svg';
 import { toEnglishDigits } from '../../utils/formatters';
 import { parseDateString } from '../../utils/jalaliDateUtils';
-// ADDED: import validation helper to remove duplicated amount validation
 import { getAmountError } from '../../utils/validators';
+// NEW: import toast hook to show errors caught from context commands
+import { useToast } from '../../hooks/useToast';
 import './AddTransactionForm.css';
 
 const AddTransactionForm = ({ onCancel, mode = 'add', initialData = null }) => {
-  // CHANGED: use async functions from context (they now return { success, error })
   const { addTransaction, editTransaction } = useContext(TransactionContext);
+  // NEW: useToast for displaying errors in the catch block
+  const { showErrorToast } = useToast();
 
   // --- Initialize form data based on mode and initialData ---
   const getInitialFormData = () => {
@@ -31,12 +33,8 @@ const AddTransactionForm = ({ onCancel, mode = 'add', initialData = null }) => {
   const [formData, setFormData] = useState(getInitialFormData);
   const [dateError, setDateError] = useState('');
   const [amountError, setAmountError] = useState('');
-
-  // ADDED: local state for submission loading
   const [submitting, setSubmitting] = useState(false);
-  // REMOVED: serverError state - errors now shown via toast
 
-  // Initialize selectedDayObj from initialData's date string using the utility
   const [selectedDayObj, setSelectedDayObj] = useState(() => {
     if (mode === 'edit' && initialData?.date) {
       return parseDateString(initialData.date);
@@ -53,8 +51,6 @@ const AddTransactionForm = ({ onCancel, mode = 'add', initialData = null }) => {
     if (name === 'amount') {
       const processedValue = toEnglishDigits(value);
       setFormData((prev) => ({ ...prev, amount: processedValue }));
-
-      // REPLACED: inline validation with shared utility
       setAmountError(getAmountError(processedValue));
       return;
     }
@@ -80,7 +76,6 @@ const AddTransactionForm = ({ onCancel, mode = 'add', initialData = null }) => {
     setFormData((prev) => ({ ...prev, type: e.target.value }));
   };
 
-  // CHANGED: handle returned result instead of try/catch with throw
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -112,24 +107,20 @@ const AddTransactionForm = ({ onCancel, mode = 'add', initialData = null }) => {
     };
 
     setSubmitting(true);
-    let result;
+
+    // NEW: try/catch – context functions now throw on failure
     try {
       if (mode === 'edit' && initialData?.id) {
-        result = await editTransaction(initialData.id, transactionData);
+        await editTransaction(initialData.id, transactionData);
       } else {
-        result = await addTransaction(transactionData);
+        await addTransaction(transactionData);
       }
-    } catch {
-      // This catch should never fire because context functions no longer throw
-    }
-
-    // CHANGED: close modal only if operation succeeded
-    if (result.success) {
+      // NEW: success – close modal
       onCancel();
-    } else {
-      // Error toast already shown by context, just re-enable submit button
+    } catch {
+      // NEW: show toast error and keep form open
+      showErrorToast('خطا در انجام عملیات');
       setSubmitting(false);
-      // Modal stays open, form data remains unchanged
     }
   };
 
@@ -176,7 +167,6 @@ const AddTransactionForm = ({ onCancel, mode = 'add', initialData = null }) => {
                   style={{ cursor: 'pointer' }}
                   title="انتخاب تاریخ"
                 />
-                {/* UPDATED: className changed to form-error-message for clarity */}
                 {dateError && <div className="form-error-message">{dateError}</div>}
               </>
             )}
@@ -200,7 +190,6 @@ const AddTransactionForm = ({ onCancel, mode = 'add', initialData = null }) => {
             dir="rtl"
             min="0"
           />
-          {/* UPDATED: className changed to form-error-message */}
           {amountError && <div className="form-error-message">{amountError}</div>}
         </div>
       </div>
@@ -255,13 +244,10 @@ const AddTransactionForm = ({ onCancel, mode = 'add', initialData = null }) => {
         <button type="button" className="cancel-button" onClick={onCancel}>
           انصراف
         </button>
-        {/* CHANGED: button disabled during submission */}
         <button type="submit" className="submit-button" disabled={submitting}>
           {submitting ? 'در حال ارسال...' : submitLabel}
         </button>
       </div>
-
-      {/* REMOVED: server-error div – errors are now shown via toast */}
     </form>
   );
 };

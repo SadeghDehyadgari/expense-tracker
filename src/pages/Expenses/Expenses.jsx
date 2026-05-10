@@ -3,29 +3,28 @@ import TransactionTable from '../../components/TransactionTable/TransactionTable
 import Modal from '../../components/Modal/Modal';
 import AddTransactionForm from '../../components/AddTransactionForm/AddTransactionForm';
 import TransactionContext from '../../context/TransactionContext';
+// NEW: import toast hook for delete error handling
+import { useToast } from '../../hooks/useToast';
 import './Expenses.css';
 
 function Expenses() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
 
-  // ADDED: delete confirmation state
   const [deleteConfirmation, setDeleteConfirmation] = useState({
     show: false,
     transactionId: null,
   });
 
-  // ADDED: local loading state for delete operation
   const [deleting, setDeleting] = useState(false);
-  // REMOVED: deleteError state - errors now shown via toast
 
-  // CHANGED: use deleteTransaction (now returns { success, error })
+  // NEW: useToast instance
+  const { showErrorToast } = useToast();
+
   const { deleteTransaction } = useContext(TransactionContext);
 
-  // ADDED: ref for auto-focus on delete button
   const deleteButtonRef = useRef(null);
 
-  // ADDED: focus the delete button when delete confirmation opens
   useEffect(() => {
     if (deleteConfirmation.show && deleteButtonRef.current) {
       deleteButtonRef.current.focus();
@@ -51,16 +50,19 @@ function Expenses() {
     setDeleteConfirmation({ show: true, transactionId });
   };
 
-  // CHANGED: handle returned result instead of try/catch
+  // NEW: use try/catch, deleteTransaction now throws on failure
   const handleConfirmDelete = async () => {
     setDeleting(true);
-    const result = await deleteTransaction(deleteConfirmation.transactionId);
-    if (result.success) {
-      // Success: close modal and reset confirmation
+    try {
+      await deleteTransaction(deleteConfirmation.transactionId);
+      // success: close the confirmation modal
       setDeleteConfirmation({ show: false, transactionId: null });
+    } catch {
+      // NEW: show toast error and leave confirmation open
+      showErrorToast('خطا در حذف تراکنش');
+    } finally {
+      setDeleting(false);
     }
-    // On error, toast already shown, just stop loading indicator
-    setDeleting(false);
   };
 
   const handleCancelDelete = () => {
@@ -91,7 +93,6 @@ function Expenses() {
       {deleteConfirmation.show && (
         <Modal title="" onClose={handleCancelDelete} className="delete-confirmation-modal">
           <p>آیا از حذف تراکنش اطمینان دارید؟</p>
-          {/* REMOVED: inline error message, now handled by global toast */}
           <div className="delete-actions">
             <button className="cancel-button" onClick={handleCancelDelete} disabled={deleting}>
               انصراف
