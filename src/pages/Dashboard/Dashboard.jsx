@@ -13,10 +13,8 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import TransactionContext from '../../context/TransactionContext';
-import useAvailableDates from '../../hooks/useAvailableDates';
-import useTransactionFilters from '../../hooks/useTransactionFilters';
-import useFilteredTransactions from '../../hooks/useFilteredTransactions';
-import useTransactionStats from '../../hooks/useTransactionStats';
+// REFACTOR: Replaced four separate hooks with the consolidated useDashboardData
+import useDashboardData from '../../hooks/useDashboardData';
 import {
   formatNumber,
   toPersianDigits,
@@ -32,7 +30,6 @@ const COLORS = {
 };
 
 const Dashboard = () => {
-  // CHANGED: destructure transactions, loading, error, and fetchTransactions from context
   const {
     transactions: allTransactions,
     loading,
@@ -40,25 +37,20 @@ const Dashboard = () => {
     fetchTransactions,
   } = useContext(TransactionContext);
 
-  // All hooks (unchanged) but they will use allTransactions
-  const { availableYears, availableMonths } = useAvailableDates(allTransactions);
-
-  const { timeRange, effectiveYear, effectiveMonth, chartRange, setChartRange, handlers } =
-    useTransactionFilters(availableYears, availableMonths);
-
-  const filteredTransactions = useFilteredTransactions(
-    allTransactions,
+  // REFACTOR: Single hook provides all data previously obtained from four hooks
+  const {
+    availableYears,
+    availableMonths,
     timeRange,
     effectiveYear,
-    effectiveMonth
-  );
-
-  const { totals, pieData, chartData } = useTransactionStats(
-    filteredTransactions,
-    timeRange,
     effectiveMonth,
-    chartRange
-  );
+    chartRange,
+    setChartRange,
+    handlers,
+    totals,
+    pieData,
+    chartData,
+  } = useDashboardData(allTransactions);
 
   const { totalIncome, totalExpense, balance } = totals;
 
@@ -84,7 +76,7 @@ const Dashboard = () => {
     );
   }, []);
 
-  // NEW: Loading state
+  // Loading state (unchanged)
   if (loading) {
     return (
       <div className="dashboard-page">
@@ -95,7 +87,7 @@ const Dashboard = () => {
     );
   }
 
-  // NEW: Error state
+  // Error state (unchanged)
   if (error) {
     return (
       <div className="dashboard-page">
@@ -111,7 +103,7 @@ const Dashboard = () => {
     );
   }
 
-  // Normal rendering (unchanged except for the above conditions)
+  // Empty state (unchanged)
   if (allTransactions.length === 0) {
     return (
       <div className="dashboard-page">
@@ -123,6 +115,7 @@ const Dashboard = () => {
     );
   }
 
+  // Main dashboard render (unchanged)
   return (
     <div className="dashboard-page">
       <div className="dashboard-content">
