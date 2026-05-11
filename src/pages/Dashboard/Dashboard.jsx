@@ -1,4 +1,4 @@
-import { useCallback, useContext } from 'react';
+import { useContext } from 'react'; // REMOVED: useCallback is no longer needed
 import {
   PieChart,
   Pie,
@@ -29,6 +29,29 @@ const COLORS = {
   red: '#ef4e4e',
 };
 
+// NEW: Moved pie label renderer to module level (no useCallback needed – no state/props dependencies)
+const renderPieLabel = ({ cx, cy, midAngle, outerRadius, percent, name }) => {
+  const RADIAN = Math.PI / 180;
+  const radiusOffset = 50;
+  const radius = outerRadius + radiusOffset;
+  const baseX = cx + radius * Math.cos(-midAngle * RADIAN);
+  const baseY = cy + radius * Math.sin(-midAngle * RADIAN);
+
+  return (
+    <text
+      x={baseX}
+      y={baseY}
+      fill="var(--neutrals-dark-2)"
+      textAnchor="middle"
+      dominantBaseline="central"
+      fontSize="12"
+      fontFamily="var(--font-family)"
+    >
+      {`${name} ${(percent * 100).toFixed(0)}%`}
+    </text>
+  );
+};
+
 const Dashboard = () => {
   const {
     transactions: allTransactions,
@@ -53,28 +76,6 @@ const Dashboard = () => {
   } = useDashboardData(allTransactions);
 
   const { totalIncome, totalExpense, balance } = totals;
-
-  const renderPieLabel = useCallback(({ cx, cy, midAngle, outerRadius, percent, name }) => {
-    const RADIAN = Math.PI / 180;
-    const radiusOffset = 50;
-    const radius = outerRadius + radiusOffset;
-    const baseX = cx + radius * Math.cos(-midAngle * RADIAN);
-    const baseY = cy + radius * Math.sin(-midAngle * RADIAN);
-
-    return (
-      <text
-        x={baseX}
-        y={baseY}
-        fill="var(--neutrals-dark-2)"
-        textAnchor="middle"
-        dominantBaseline="central"
-        fontSize="12"
-        fontFamily="var(--font-family)"
-      >
-        {`${name} ${(percent * 100).toFixed(0)}%`}
-      </text>
-    );
-  }, []);
 
   // Loading state (unchanged)
   if (loading) {
@@ -199,7 +200,7 @@ const Dashboard = () => {
                   outerRadius={90}
                   fill="#8884d8"
                   dataKey="value"
-                  label={renderPieLabel}
+                  label={renderPieLabel} // CHANGED: uses module-level function, no useCallback
                 >
                   {pieData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />

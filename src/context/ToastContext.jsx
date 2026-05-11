@@ -1,5 +1,5 @@
-// NEW: ToastContext for showing error notifications
-import { createContext, useState, useCallback } from 'react';
+// UPDATED: Re-added useCallback + useMemo to prevent unnecessary consumer re-renders
+import { createContext, useState, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import './Toast.css';
 
@@ -10,10 +10,12 @@ let toastCounter = 0;
 export const ToastProvider = ({ children }) => {
   const [toasts, setToasts] = useState([]);
 
+  // useCallback applied – stable reference as long as deps are unchanged
   const removeToast = useCallback((id) => {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
   }, []);
 
+  // useCallback applied – depends on stable removeToast
   const showToast = useCallback(
     (message, type = 'error') => {
       const id = ++toastCounter;
@@ -24,6 +26,7 @@ export const ToastProvider = ({ children }) => {
     [removeToast]
   );
 
+  // useCallback applied – depends on stable showToast
   const showErrorToast = useCallback(
     (message) => {
       showToast(message, 'error');
@@ -31,7 +34,8 @@ export const ToastProvider = ({ children }) => {
     [showToast]
   );
 
-  const value = { showErrorToast };
+  // CHANGED: useMemo wraps value object; changes only when showErrorToast changes
+  const value = useMemo(() => ({ showErrorToast }), [showErrorToast]);
 
   return (
     <ToastContext.Provider value={value}>

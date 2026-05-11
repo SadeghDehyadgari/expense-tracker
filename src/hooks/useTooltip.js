@@ -31,34 +31,30 @@ export const useTooltip = () => {
     setTooltip({ visible: true, text, x, y });
   }, []);
 
-  const handleMouseEnter = useCallback(
-    (text) => (e) => {
-      showTooltip(text, e.currentTarget);
-    },
-    [showTooltip]
-  );
+  // CHANGED: handleMouseEnter is a plain function now – no need for useCallback (consumer not memoized)
+  const handleMouseEnter = (text) => (e) => {
+    showTooltip(text, e.currentTarget);
+  };
 
-  const handleMouseLeave = useCallback(() => {
+  // CHANGED: handleMouseLeave is a plain function
+  const handleMouseLeave = () => {
     hideTooltip();
-  }, [hideTooltip]);
+  };
 
-  // Decision made outside setTooltip callback to prevent double‑invocation issues (e.g. Strict Mode)
-  const handleClick = useCallback(
-    (text) => (e) => {
-      e.stopPropagation();
-      const rect = e.currentTarget.getBoundingClientRect();
-      const x = rect.left + rect.width / 2;
-      const y = rect.bottom + 8;
+  // CHANGED: handleClick is a plain function – decision made outside setTooltip to prevent double‑invocation issues
+  const handleClick = (text) => (e) => {
+    e.stopPropagation();
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = rect.left + rect.width / 2;
+    const y = rect.bottom + 8;
 
-      const current = tooltipRef.current;
-      if (current.visible && current.text === text) {
-        setTooltip((prev) => ({ ...prev, visible: false }));
-      } else {
-        setTooltip({ visible: true, text, x, y });
-      }
-    },
-    []
-  );
+    const current = tooltipRef.current;
+    if (current.visible && current.text === text) {
+      setTooltip((prev) => ({ ...prev, visible: false }));
+    } else {
+      setTooltip({ visible: true, text, x, y });
+    }
+  };
 
   return {
     tooltip,

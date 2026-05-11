@@ -2,15 +2,35 @@ import { useContext, useState, useEffect, useRef } from 'react';
 import TransactionContext from '../../context/TransactionContext';
 import { toPersianDigits, formatNumber, truncateWords } from '../../utils/formatters';
 import { useTooltip } from '../../hooks/useTooltip';
+// NEW: Imports needed for self‑contained modal handling (removed prop drilling)
+import Modal from '../Modal/Modal';
+import AddTransactionForm from '../AddTransactionForm/AddTransactionForm';
+import { useToast } from '../../hooks/useToast';
 import './TransactionTable.css';
 import PlusIcon from '../../assets/Outline/Plus.svg';
 import DeleteIcon from '../../assets/Outline/Delete.svg';
 import EditSquareIcon from '../../assets/Outline/Edit Square.svg';
 import DangerCircleIcon from '../../assets/Outline/Danger Circle.svg';
 
-const TransactionTable = ({ onAddTransactionClick, onEditTransaction, onDeleteTransaction }) => {
-  // CHANGED: destructure transactions, loading, error, and fetchTransactions from context
-  const { transactions, loading, error, fetchTransactions } = useContext(TransactionContext);
+const TransactionTable = () => {
+  // CHANGED: All modal/delete state now lives here, not in parent
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState(null);
+
+  const [deleteConfirmation, setDeleteConfirmation] = useState({
+    show: false,
+    transactionId: null,
+  });
+  const [deleting, setDeleting] = useState(false);
+
+  const deleteButtonRef = useRef(null);
+
+  // NEW: useToast for error toasts (replaces prop‑driven error handling)
+  const { showErrorToast } = useToast();
+
+  // CHANGED: destructure all needed from context (no props)
+  const { transactions, loading, error, fetchTransactions, deleteTransaction } =
+    useContext(TransactionContext);
   const isEmpty = transactions.length === 0;
 
   const [openMenuId, setOpenMenuId] = useState(null);
@@ -27,6 +47,13 @@ const TransactionTable = ({ onAddTransactionClick, onEditTransaction, onDeleteTr
     handleMouseLeave: tooltipMouseLeave,
     handleClick: tooltipClick,
   } = useTooltip();
+
+  // Focus the delete confirmation button when it appears (moved from Expenses)
+  useEffect(() => {
+    if (deleteConfirmation.show && deleteButtonRef.current) {
+      deleteButtonRef.current.focus();
+    }
+  }, [deleteConfirmation.show]);
 
   // Merge close-handler for dropdown and tooltip (unchanged)
   useEffect(() => {
@@ -85,18 +112,50 @@ const TransactionTable = ({ onAddTransactionClick, onEditTransaction, onDeleteTr
     return () => window.removeEventListener('scroll', handleScroll, true);
   }, [tooltip.visible, hideTooltip]);
 
+  // ---------- Modal & delete handlers (NEW/MOVED from Expenses) ----------
+
+  const handleOpenModal = () => {
+    setEditingTransaction(null);
+    setIsModalOpen(true);
+  };
+
+  const handleEditTransaction = (transaction) => {
+    setEditingTransaction(transaction);
+    setIsModalOpen(true);
+    setOpenMenuId(null); // close kebab menu if open
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingTransaction(null);
+  };
+
+  const handleDeleteClick = (transactionId) => {
+    setDeleteConfirmation({ show: true, transactionId });
+    setOpenMenuId(null); // close kebab menu
+  };
+
+  const handleConfirmDelete = async () => {
+    setDeleting(true);
+    try {
+      await deleteTransaction(deleteConfirmation.transactionId);
+      // success: close confirmation modal
+      setDeleteConfirmation({ show: false, transactionId: null });
+    } catch {
+      // CHANGED: show toast error and keep confirmation open (better UX)
+      showErrorToast('خطا در حذف تراکنش');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteConfirmation({ show: false, transactionId: null });
+  };
+
+  // Kebab menu handlers (unchanged, but they now call the local functions above)
   const handleKebabClick = (id) => {
     setOpenMenuId((prev) => (prev === id ? null : id));
-  };
-
-  const handleDelete = (id) => {
-    onDeleteTransaction(id);
-    setOpenMenuId(null);
-  };
-
-  const handleEdit = (transaction) => {
-    onEditTransaction(transaction);
-    setOpenMenuId(null);
   };
 
   const KebabIcon = (
@@ -107,13 +166,13 @@ const TransactionTable = ({ onAddTransactionClick, onEditTransaction, onDeleteTr
     </svg>
   );
 
-  // NEW: Render loading state
+  // ---- Loading state (unchanged) ----
   if (loading) {
     return (
       <div className="table-container">
         <div className="table-header">
           <h2 className="table-title">تراکنش‌ها</h2>
-          <button className="add-transaction-button" onClick={onAddTransactionClick}>
+          <button className="add-transaction-button" onClick={handleOpenModal}>
             <img src={PlusIcon} alt="Plus" className="button-icon" />
             افزودن تراکنش
           </button>
@@ -125,13 +184,13 @@ const TransactionTable = ({ onAddTransactionClick, onEditTransaction, onDeleteTr
     );
   }
 
-  // NEW: Render error state
+  // ---- Error state (unchanged) ----
   if (error) {
     return (
       <div className="table-container">
         <div className="table-header">
           <h2 className="table-title">تراکنش‌ها</h2>
-          <button className="add-transaction-button" onClick={onAddTransactionClick}>
+          <button className="add-transaction-button" onClick={handleOpenModal}>
             <img src={PlusIcon} alt="Plus" className="button-icon" />
             افزودن تراکنش
           </button>
@@ -148,12 +207,12 @@ const TransactionTable = ({ onAddTransactionClick, onEditTransaction, onDeleteTr
     );
   }
 
-  // Normal rendering (unchanged from here, except added loading/error handling above)
+  // ---- Main render (unchanged except for added modals & removed prop callbacks) ----
   return (
     <div className="table-container">
       <div className="table-header">
         <h2 className="table-title">تراکنش‌ها</h2>
-        <button className="add-transaction-button" onClick={onAddTransactionClick}>
+        <button className="add-transaction-button" onClick={handleOpenModal}>
           <img src={PlusIcon} alt="Plus" className="button-icon" />
           افزودن تراکنش
         </button>
@@ -244,13 +303,16 @@ const TransactionTable = ({ onAddTransactionClick, onEditTransaction, onDeleteTr
                           className={`dropdown-menu ${menuAbove ? 'dropdown-menu-above' : ''}`}
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <button className="dropdown-item" onClick={() => handleEdit(transaction)}>
+                          <button
+                            className="dropdown-item"
+                            onClick={() => handleEditTransaction(transaction)}
+                          >
                             <img src={EditSquareIcon} alt="ویرایش" className="dropdown-item-icon" />
                             <span>ویرایش</span>
                           </button>
                           <button
                             className="dropdown-item"
-                            onClick={() => handleDelete(transaction.id)}
+                            onClick={() => handleDeleteClick(transaction.id)}
                           >
                             <img src={DeleteIcon} alt="حذف" className="dropdown-item-icon" />
                             <span>حذف</span>
@@ -265,6 +327,39 @@ const TransactionTable = ({ onAddTransactionClick, onEditTransaction, onDeleteTr
           </table>
         )}
       </div>
+
+      {/* ===== MODALS (NEW: moved from Expenses) ===== */}
+      {isModalOpen && (
+        <Modal
+          title={editingTransaction ? 'ویرایش تراکنش' : 'افزودن تراکنش'}
+          onClose={handleCloseModal}
+        >
+          <AddTransactionForm
+            mode={editingTransaction ? 'edit' : 'add'}
+            initialData={editingTransaction}
+            onCancel={handleCloseModal}
+          />
+        </Modal>
+      )}
+
+      {deleteConfirmation.show && (
+        <Modal title="" onClose={handleCancelDelete} className="delete-confirmation-modal">
+          <p>آیا از حذف تراکنش اطمینان دارید؟</p>
+          <div className="delete-actions">
+            <button className="cancel-button" onClick={handleCancelDelete} disabled={deleting}>
+              انصراف
+            </button>
+            <button
+              className="delete-confirm-button"
+              onClick={handleConfirmDelete}
+              ref={deleteButtonRef}
+              disabled={deleting}
+            >
+              {deleting ? 'در حال حذف...' : 'حذف'}
+            </button>
+          </div>
+        </Modal>
+      )}
 
       {/* Tooltip portal (unchanged) */}
       {tooltip.visible && (
