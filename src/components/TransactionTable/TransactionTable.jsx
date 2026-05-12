@@ -1,11 +1,17 @@
-import { useContext, useState, useEffect, useRef } from 'react';
+import { useContext, useState, useEffect, useRef } from 'react'; // CHANGED: added useMemo
 import TransactionContext from '../../context/TransactionContext';
 import { toPersianDigits, formatNumber, truncateWords } from '../../utils/formatters';
 import { useTooltip } from '../../hooks/useTooltip';
-// NEW: Imports needed for self‑contained modal handling (removed prop drilling)
+// NEW: Imports needed for self‑contained modal handling
 import Modal from '../Modal/Modal';
 import AddTransactionForm from '../AddTransactionForm/AddTransactionForm';
 import { useToast } from '../../hooks/useToast';
+// NEW: Import custom hook for filtering/sorting
+import useTransactionFilters from '../../hooks/useTransactionFilters';
+// NEW: Import extracted toolbar component
+import TransactionToolbar from './TransactionToolbar';
+// NEW: Import formatJalaliDate helper
+import { formatJalaliDate } from '../../utils/jalaliDateUtils';
 import './TransactionTable.css';
 import PlusIcon from '../../assets/Outline/Plus.svg';
 import DeleteIcon from '../../assets/Outline/Delete.svg';
@@ -13,7 +19,7 @@ import EditSquareIcon from '../../assets/Outline/Edit Square.svg';
 import DangerCircleIcon from '../../assets/Outline/Danger Circle.svg';
 
 const TransactionTable = () => {
-  // CHANGED: All modal/delete state now lives here, not in parent
+  // CHANGED: All modal/delete state now lives here
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
 
@@ -25,18 +31,34 @@ const TransactionTable = () => {
 
   const deleteButtonRef = useRef(null);
 
-  // NEW: useToast for error toasts (replaces prop‑driven error handling)
+  // NEW: useToast for error toasts
   const { showErrorToast } = useToast();
 
-  // CHANGED: destructure all needed from context (no props)
+  // CHANGED: destructure all needed from context
   const { transactions, loading, error, fetchTransactions, deleteTransaction } =
     useContext(TransactionContext);
-  const isEmpty = transactions.length === 0;
+
+  // NEW: Use filtering & sorting hook
+  const {
+    filteredTransactions,
+    fromDate,
+    toDate,
+    sortOrder,
+    setFromDate,
+    setToDate,
+    setSortOrder,
+  } = useTransactionFilters(transactions);
+
+  const isEmpty = filteredTransactions.length === 0;
 
   const [openMenuId, setOpenMenuId] = useState(null);
   const [menuAbove, setMenuAbove] = useState(false);
   const menuRef = useRef(null);
   const buttonRefs = useRef({});
+
+  // NEW: State for date picker objects (to display selected dates)
+  const [fromDateObj, setFromDateObj] = useState(null);
+  const [toDateObj, setToDateObj] = useState(null);
 
   // Tooltip logic (unchanged)
   const {
@@ -48,14 +70,14 @@ const TransactionTable = () => {
     handleClick: tooltipClick,
   } = useTooltip();
 
-  // Focus the delete confirmation button when it appears (moved from Expenses)
+  // Focus the delete confirmation button when it appears
   useEffect(() => {
     if (deleteConfirmation.show && deleteButtonRef.current) {
       deleteButtonRef.current.focus();
     }
   }, [deleteConfirmation.show]);
 
-  // Merge close-handler for dropdown and tooltip (unchanged)
+  // Merge close-handler for dropdown and tooltip
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (openMenuId !== null && menuRef.current && !menuRef.current.contains(event.target)) {
@@ -79,7 +101,7 @@ const TransactionTable = () => {
     };
   }, [openMenuId, tooltip.visible, hideTooltip, tooltipTriggerRef]);
 
-  // Flip dropdown direction (unchanged)
+  // Flip dropdown direction
   useEffect(() => {
     if (openMenuId === null || !menuRef.current) {
       return;
@@ -102,7 +124,7 @@ const TransactionTable = () => {
     return () => cancelAnimationFrame(timer);
   }, [openMenuId]);
 
-  // Hide tooltip on scroll (unchanged)
+  // Hide tooltip on scroll
   useEffect(() => {
     if (!tooltip.visible) return;
 
@@ -112,7 +134,7 @@ const TransactionTable = () => {
     return () => window.removeEventListener('scroll', handleScroll, true);
   }, [tooltip.visible, hideTooltip]);
 
-  // ---------- Modal & delete handlers (NEW/MOVED from Expenses) ----------
+  // ---------- Modal & delete handlers ----------
 
   const handleOpenModal = () => {
     setEditingTransaction(null);
@@ -122,7 +144,7 @@ const TransactionTable = () => {
   const handleEditTransaction = (transaction) => {
     setEditingTransaction(transaction);
     setIsModalOpen(true);
-    setOpenMenuId(null); // close kebab menu if open
+    setOpenMenuId(null);
   };
 
   const handleCloseModal = () => {
@@ -132,17 +154,15 @@ const TransactionTable = () => {
 
   const handleDeleteClick = (transactionId) => {
     setDeleteConfirmation({ show: true, transactionId });
-    setOpenMenuId(null); // close kebab menu
+    setOpenMenuId(null);
   };
 
   const handleConfirmDelete = async () => {
     setDeleting(true);
     try {
       await deleteTransaction(deleteConfirmation.transactionId);
-      // success: close confirmation modal
       setDeleteConfirmation({ show: false, transactionId: null });
     } catch {
-      // CHANGED: show toast error and keep confirmation open (better UX)
       showErrorToast('خطا در حذف تراکنش');
     } finally {
       setDeleting(false);
@@ -153,7 +173,7 @@ const TransactionTable = () => {
     setDeleteConfirmation({ show: false, transactionId: null });
   };
 
-  // Kebab menu handlers (unchanged, but they now call the local functions above)
+  // Kebab menu handlers
   const handleKebabClick = (id) => {
     setOpenMenuId((prev) => (prev === id ? null : id));
   };
@@ -166,7 +186,42 @@ const TransactionTable = () => {
     </svg>
   );
 
-  // ---- Loading state (unchanged) ----
+  // NEW: Handlers for date pickers using shared helper
+  const handleFromDateChange = (selectedDay) => {
+    if (selectedDay) {
+      const formatted = formatJalaliDate(selectedDay);
+      setFromDate(formatted);
+      setFromDateObj(selectedDay);
+    } else {
+      setFromDate('');
+      setFromDateObj(null);
+    }
+  };
+
+  const handleToDateChange = (selectedDay) => {
+    if (selectedDay) {
+      const formatted = formatJalaliDate(selectedDay);
+      setToDate(formatted);
+      setToDateObj(selectedDay);
+    } else {
+      setToDate('');
+      setToDateObj(null);
+    }
+  };
+
+  // NEW: Create an object of toolbar props to avoid repetition
+  const toolbarProps = {
+    fromDate,
+    toDate,
+    sortOrder,
+    fromDateObj,
+    toDateObj,
+    onFromDateChange: handleFromDateChange,
+    onToDateChange: handleToDateChange,
+    onSortOrderChange: setSortOrder,
+  };
+
+  // ---- Loading state (with toolbar) ----
   if (loading) {
     return (
       <div className="table-container">
@@ -177,6 +232,7 @@ const TransactionTable = () => {
             افزودن تراکنش
           </button>
         </div>
+        <TransactionToolbar {...toolbarProps} />
         <div className="table-content">
           <p className="loading-text">در حال بارگذاری تراکنش‌ها...</p>
         </div>
@@ -184,7 +240,7 @@ const TransactionTable = () => {
     );
   }
 
-  // ---- Error state (unchanged) ----
+  // ---- Error state (with toolbar) ----
   if (error) {
     return (
       <div className="table-container">
@@ -195,6 +251,7 @@ const TransactionTable = () => {
             افزودن تراکنش
           </button>
         </div>
+        <TransactionToolbar {...toolbarProps} />
         <div className="table-content">
           <div className="error-state">
             <p className="error-message">{error}</p>
@@ -207,7 +264,7 @@ const TransactionTable = () => {
     );
   }
 
-  // ---- Main render (unchanged except for added modals & removed prop callbacks) ----
+  // ---- Main render (with toolbar and filtered transactions) ----
   return (
     <div className="table-container">
       <div className="table-header">
@@ -217,6 +274,8 @@ const TransactionTable = () => {
           افزودن تراکنش
         </button>
       </div>
+
+      <TransactionToolbar {...toolbarProps} />
 
       <div className={`table-content ${!isEmpty ? 'with-transactions' : ''}`}>
         {isEmpty ? (
@@ -236,7 +295,7 @@ const TransactionTable = () => {
               </tr>
             </thead>
             <tbody>
-              {transactions.map((transaction) => {
+              {filteredTransactions.map((transaction) => {
                 const truncatedDesc = truncateWords(transaction.description, 5);
                 const hasMoreWords =
                   transaction.description && transaction.description.split(' ').length > 5;
@@ -328,7 +387,7 @@ const TransactionTable = () => {
         )}
       </div>
 
-      {/* ===== MODALS (NEW: moved from Expenses) ===== */}
+      {/* ===== MODALS (unchanged) ===== */}
       {isModalOpen && (
         <Modal
           title={editingTransaction ? 'ویرایش تراکنش' : 'افزودن تراکنش'}

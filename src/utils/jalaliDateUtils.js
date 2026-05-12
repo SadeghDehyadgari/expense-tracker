@@ -71,11 +71,23 @@ const parseDateString = (dateString) => {
   };
 };
 
+/**
+ * NEW: Format a selected day object (from react-modern-calendar-date-picker) into 'YYYY/MM/DD' string.
+ * @param {Object} selectedDay - { year, month, day }
+ * @returns {string} Formatted date string
+ */
+const formatJalaliDate = (selectedDay) => {
+  if (!selectedDay) return '';
+  const { year, month, day } = selectedDay;
+  return `${year}/${String(month).padStart(2, '0')}/${String(day).padStart(2, '0')}`;
+};
+
 export {
   getYear,
   getYearMonth,
   getDay,
   getCurrentJalaliInfo,
   last12MonthsList,
-  parseDateString, // Added for reuse (AddTransactionForm, etc.)
+  parseDateString,
+  formatJalaliDate, // NEW export
 };

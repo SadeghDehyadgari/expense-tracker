@@ -4,7 +4,8 @@ import DatePicker from '@amir04lm26/react-modern-calendar-date-picker';
 import '@amir04lm26/react-modern-calendar-date-picker/lib/DatePicker.css';
 import CalendarIcon from '../../assets/Outline/Calendar.svg';
 import { toEnglishDigits } from '../../utils/formatters';
-import { parseDateString } from '../../utils/jalaliDateUtils';
+// CHANGED: import formatJalaliDate from jalaliDateUtils
+import { parseDateString, formatJalaliDate } from '../../utils/jalaliDateUtils';
 import { getAmountError } from '../../utils/validators';
 // NEW: import toast hook to show errors caught from context commands
 import { useToast } from '../../hooks/useToast';
@@ -62,7 +63,8 @@ const AddTransactionForm = ({ onCancel, mode = 'add', initialData = null }) => {
 
   const handleDateChange = (selectedDay) => {
     if (selectedDay) {
-      const formatted = `${selectedDay.year}/${String(selectedDay.month).padStart(2, '0')}/${String(selectedDay.day).padStart(2, '0')}`;
+      // CHANGED: use shared helper to format date
+      const formatted = formatJalaliDate(selectedDay);
       setFormData((prev) => ({ ...prev, date: formatted }));
       setSelectedDayObj(selectedDay);
       setDateError('');
