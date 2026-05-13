@@ -425,10 +425,17 @@
   background-color: var(--neutrals-white);
   font-family: var(--font-family);
   font-size: var(--font-size-sm);
-  color: var(--neutrals-grey-2);
+  color: var(--neutrals-grey-1);
   text-align: right;
   cursor: pointer;
   appearance: none;
+  transition: all 0.3s;
+}
+
+/* FORCE remove outline on select focus */
+.tx-filter-select:focus {
+  outline: none;
+  border: 1px solid var(--primary-light);
 }
 
 .tx-filter-select-icon {
@@ -440,6 +447,39 @@
   height: 0.75rem;
   pointer-events: none;
   filter: invert(74%) sepia(35%) saturate(600%) hue-rotate(180deg) brightness(98%) contrast(92%);
+}
+
+/* NEW: Clear button (X) for date filters */
+.tx-filter-clear-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 0.25rem;
+  transition: background-color 0.2s ease;
+}
+
+.tx-filter-clear-icon:hover {
+  background-color: var(--neutrals-soft-grey-2);
+}
+
+.tx-filter-clear-icon:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.tx-filter-clear-icon svg {
+  width: 1rem;
+  height: 1rem;
+  pointer-events: none;
 }
 
 /* Responsive */
