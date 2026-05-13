@@ -9,6 +9,8 @@ import { parseDateString, formatJalaliDate } from '../../utils/jalaliDateUtils';
 import { getAmountError } from '../../utils/validators';
 // NEW: import toast hook to show errors caught from context commands
 import { useToast } from '../../hooks/useToast';
+// NEW: Import Persian digits converter
+import { toPersianDigits } from '../../utils/formatters';
 import './AddTransactionForm.css';
 
 const AddTransactionForm = ({ onCancel, mode = 'add', initialData = null }) => {
@@ -151,7 +153,7 @@ const AddTransactionForm = ({ onCancel, mode = 'add', initialData = null }) => {
                   type="text"
                   id="date"
                   name="date"
-                  value={formData.date}
+                  value={toPersianDigits(formData.date)}
                   onChange={() => {}}
                   required
                   className={`form-input pointer ${dateError ? 'error-input' : ''}`}

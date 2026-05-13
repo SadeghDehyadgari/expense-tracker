@@ -1,9 +1,12 @@
+// TransactionToolbar.jsx
 // NEW: Extracted toolbar component to avoid code duplication
 import { useRef } from 'react'; // NEW: Added useRef for input focus management
 import DatePicker from '@amir04lm26/react-modern-calendar-date-picker';
 import '@amir04lm26/react-modern-calendar-date-picker/lib/DatePicker.css';
 import CalendarIcon from '../../assets/Outline/Calendar.svg';
 import ArrowDownIcon from '../../assets/Outline/Arrow - Down 2.svg';
+// NEW: Import Persian digits converter
+import { toPersianDigits } from '../../utils/formatters';
 
 const TransactionToolbar = ({
   fromDate,
@@ -15,7 +18,7 @@ const TransactionToolbar = ({
   onToDateChange,
   onSortOrderChange,
 }) => {
-  // NEW: Refs to programmatically blur inputs after clearing date
+  // NEW: Refs to programmatically focus inputs after clearing date
   const fromInputRef = useRef(null);
   const toInputRef = useRef(null);
 
@@ -23,7 +26,7 @@ const TransactionToolbar = ({
   const handleClearFromDate = (e) => {
     e.stopPropagation(); // Prevent date picker from opening
     onFromDateChange(null);
-    // Blur the input to release focus, so calendar can close on outside click
+    // Focus the input to release focus, so calendar can close on outside click
     if (fromInputRef.current) {
       fromInputRef.current.focus();
     }
@@ -49,14 +52,15 @@ const TransactionToolbar = ({
             locale="fa"
             calendar="persian"
             minimumDate={{ year: 1300, month: 1, day: 1 }}
-            maximumDate={{ year: 1550, month: 12, day: 29 }}
+            maximumDate={{ year: 1450, month: 12, day: 29 }}
             shouldHighlightWeekends
             calendarClassName="compact-calendar"
             renderInput={({ ref }) => (
               <>
                 <input
                   type="text"
-                  value={fromDate}
+                  // CHANGED: Display Persian digits for the date value
+                  value={toPersianDigits(fromDate)}
                   readOnly
                   placeholder="انتخاب کنید"
                   className="tx-filter-input"
@@ -64,13 +68,7 @@ const TransactionToolbar = ({
                     // CHANGED: Store ref locally and also pass to DatePicker internal ref
                     fromInputRef.current = el;
                     // Handle both function ref and object ref to avoid "ref is not a function" error
-                    if (ref) {
-                      if (typeof ref === 'function') {
-                        ref(el);
-                      } else {
-                        ref.current = el;
-                      }
-                    }
+                    ref.current = el;
                   }}
                 />
                 {/* CHANGED: Conditional icon - calendar or clear (X) */}
@@ -115,19 +113,14 @@ const TransactionToolbar = ({
               <>
                 <input
                   type="text"
-                  value={toDate}
+                  // CHANGED: Display Persian digits for the date value
+                  value={toPersianDigits(toDate)}
                   readOnly
                   placeholder="انتخاب کنید"
                   className="tx-filter-input"
                   ref={(el) => {
                     toInputRef.current = el;
-                    if (ref) {
-                      if (typeof ref === 'function') {
-                        ref(el);
-                      } else {
-                        ref.current = el;
-                      }
-                    }
+                    ref.current = el;
                   }}
                 />
                 {/* CHANGED: Conditional icon - calendar or clear (X) */}
