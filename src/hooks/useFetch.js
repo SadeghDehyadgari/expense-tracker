@@ -1,3 +1,4 @@
+// REMOVED reverse() to let TransactionContext handle sorting consistently
 import { useState, useEffect, useRef, useCallback } from 'react';
 
 /**
@@ -37,8 +38,7 @@ const useFetch = (url) => {
         // CHANGED: throw Persian error message directly (preserved from original context)
         if (!res.ok) throw new Error('خطا در ارتباط با سرور');
         const json = await res.json();
-        // Reverse to match previous behavior (most recent first)
-        json.reverse();
+        // REMOVED: json.reverse() - sorting is now handled by TransactionContext to ensure consistency
         setData(json);
         if (!silent) {
           setLoading(false);

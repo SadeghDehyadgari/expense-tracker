@@ -525,7 +525,7 @@
 }
 
 /* Prevents the calendar to cause y-scroll on very small screens */
-@media (max-width: 400px) {
+@media (max-width: 320px) {
   .compact-calendar {
     font-size: 7px;
   }

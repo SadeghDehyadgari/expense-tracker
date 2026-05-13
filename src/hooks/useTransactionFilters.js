@@ -10,8 +10,8 @@ import { useState, useMemo } from 'react';
 const useTransactionFilters = (transactions) => {
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
-  // CHANGED: default sortOrder is now empty string (no sorting, placeholder selected)
-  const [sortOrder, setSortOrder] = useState(''); // '', 'newest', 'oldest', 'highest', 'lowest'
+  // CHANGED: default sortOrder is now 'newest' to show latest transactions first by default
+  const [sortOrder, setSortOrder] = useState('newest'); // 'newest', 'oldest', 'highest', 'lowest'
 
   const filteredTransactions = useMemo(() => {
     let filtered = [...transactions];

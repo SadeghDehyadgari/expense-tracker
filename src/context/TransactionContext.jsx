@@ -24,6 +24,7 @@ export const TransactionProvider = ({ children }) => {
 
   useEffect(() => {
     if (transactionsRaw) {
+      // CHANGED: store raw data as-is; sorting is handled by useTransactionFilters
       setTransactions(transactionsRaw);
     }
   }, [transactionsRaw]);
@@ -31,17 +32,16 @@ export const TransactionProvider = ({ children }) => {
   // NEW: silent refresh after mutations – uses timeout-safe fetch
   const silentRefresh = useCallback(async () => {
     try {
-      const res = await fetchWithTimeout('/api/transactions'); // CHANGED: timeout-aware
+      const res = await fetchWithTimeout('/api/transactions');
       if (!res.ok) throw new Error('خطا در به‌روزرسانی لیست تراکنش‌ها');
       const freshData = await res.json();
+      // CHANGED: store fresh data without sorting
       setTransactions(freshData);
     } catch {
-      // If aborted due to timeout, show a toast but keep current state intact
       showErrorToast('خطا در به‌روزرسانی لیست تراکنش‌ها');
     }
   }, [showErrorToast]);
 
-  // CHANGED: throw on failure, using timeout-safe fetch
   const addTransaction = useCallback(
     async (data) => {
       const res = await fetchWithTimeout('/api/transactions', {

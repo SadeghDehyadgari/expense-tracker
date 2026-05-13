@@ -1,3 +1,4 @@
+// TransactionTable.jsx (fixed dropdown direction flip issue)
 import { useContext, useState, useEffect, useRef } from 'react'; // CHANGED: added useMemo
 import TransactionContext from '../../context/TransactionContext';
 import { toPersianDigits, formatNumber, truncateWords } from '../../utils/formatters';
@@ -101,24 +102,30 @@ const TransactionTable = () => {
     };
   }, [openMenuId, tooltip.visible, hideTooltip, tooltipTriggerRef]);
 
-  // Flip dropdown direction
+  // FIXED: Flip dropdown direction based on button position, not dropdown itself
   useEffect(() => {
-    if (openMenuId === null || !menuRef.current) {
+    if (openMenuId === null) {
+      // Reset direction when menu closes to avoid stale state
+      setMenuAbove(false);
       return;
     }
 
+    // Use requestAnimationFrame to ensure DOM is ready
     const timer = requestAnimationFrame(() => {
-      const dropdown = menuRef.current;
       const button = buttonRefs.current[openMenuId];
-      if (!dropdown || !button) return;
+      if (!button) return;
 
-      const scrollContainer = dropdown.closest('.table-content.with-transactions');
+      const scrollContainer = button.closest('.table-content.with-transactions');
       if (!scrollContainer) return;
 
-      const dropdownRect = dropdown.getBoundingClientRect();
+      const buttonRect = button.getBoundingClientRect();
       const containerRect = scrollContainer.getBoundingClientRect();
+      const dropdownHeight = 100; // Approximate height of dropdown menu (adjust based on CSS)
+      const spaceBelow = containerRect.bottom - buttonRect.bottom;
+      const spaceAbove = buttonRect.top - containerRect.top;
 
-      setMenuAbove(dropdownRect.bottom > containerRect.bottom - 4);
+      // Show above if there is not enough space below, otherwise show below
+      setMenuAbove(spaceBelow < dropdownHeight && spaceAbove > spaceBelow);
     });
 
     return () => cancelAnimationFrame(timer);

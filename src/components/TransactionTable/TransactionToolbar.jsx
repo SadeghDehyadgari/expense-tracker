@@ -1,11 +1,8 @@
-// TransactionToolbar.jsx
-// NEW: Extracted toolbar component to avoid code duplication
-import { useRef } from 'react'; // NEW: Added useRef for input focus management
+import { useRef } from 'react';
 import DatePicker from '@amir04lm26/react-modern-calendar-date-picker';
 import '@amir04lm26/react-modern-calendar-date-picker/lib/DatePicker.css';
 import CalendarIcon from '../../assets/Outline/Calendar.svg';
 import ArrowDownIcon from '../../assets/Outline/Arrow - Down 2.svg';
-// NEW: Import Persian digits converter
 import { toPersianDigits } from '../../utils/formatters';
 
 const TransactionToolbar = ({
@@ -18,13 +15,12 @@ const TransactionToolbar = ({
   onToDateChange,
   onSortOrderChange,
 }) => {
-  // NEW: Refs to programmatically focus inputs after clearing date
   const fromInputRef = useRef(null);
   const toInputRef = useRef(null);
 
-  // NEW: Helper to clear from date and remove focus to allow calendar to close
+  // NEW: Helper to clear from date and add focus to allow calendar to close
   const handleClearFromDate = (e) => {
-    e.stopPropagation(); // Prevent date picker from opening
+    e.stopPropagation();
     onFromDateChange(null);
     // Focus the input to release focus, so calendar can close on outside click
     if (fromInputRef.current) {
@@ -32,7 +28,7 @@ const TransactionToolbar = ({
     }
   };
 
-  // NEW: Helper to clear to date and remove focus
+  // NEW: Helper to clear to date and add focus
   const handleClearToDate = (e) => {
     e.stopPropagation();
     onToDateChange(null);
@@ -59,19 +55,16 @@ const TransactionToolbar = ({
               <>
                 <input
                   type="text"
-                  // CHANGED: Display Persian digits for the date value
                   value={toPersianDigits(fromDate)}
                   readOnly
                   placeholder="انتخاب کنید"
                   className="tx-filter-input"
                   ref={(el) => {
-                    // CHANGED: Store ref locally and also pass to DatePicker internal ref
                     fromInputRef.current = el;
                     // Handle both function ref and object ref to avoid "ref is not a function" error
                     ref.current = el;
                   }}
                 />
-                {/* CHANGED: Conditional icon - calendar or clear (X) */}
                 {fromDate ? (
                   <button
                     type="button"
@@ -113,7 +106,6 @@ const TransactionToolbar = ({
               <>
                 <input
                   type="text"
-                  // CHANGED: Display Persian digits for the date value
                   value={toPersianDigits(toDate)}
                   readOnly
                   placeholder="انتخاب کنید"
@@ -123,7 +115,6 @@ const TransactionToolbar = ({
                     ref.current = el;
                   }}
                 />
-                {/* CHANGED: Conditional icon - calendar or clear (X) */}
                 {toDate ? (
                   <button
                     type="button"
@@ -157,10 +148,7 @@ const TransactionToolbar = ({
             value={sortOrder}
             onChange={(e) => onSortOrderChange(e.target.value)}
           >
-            {/* NEW: Disabled placeholder option as default */}
-            <option value="" disabled>
-              انتخاب کنید
-            </option>
+            {/* REMOVED disabled option because default is now 'newest' */}
             <option value="newest">جدیدترین</option>
             <option value="oldest">قدیمی‌ترین</option>
             <option value="highest">بیشترین مبلغ</option>
