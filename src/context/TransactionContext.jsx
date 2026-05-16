@@ -65,8 +65,8 @@ export const TransactionProvider = ({ children }) => {
   const fetchTransactions = useCallback(async () => {
     try {
       await refetch();
-    } catch {
-      // Error already handled inside useFetch, but we keep silent to avoid double toast
+    } catch (err) {
+      console.error(err);
     }
   }, [refetch]);
 
