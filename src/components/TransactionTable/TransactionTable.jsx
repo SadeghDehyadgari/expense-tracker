@@ -6,6 +6,10 @@ import Modal from '../Modal/Modal';
 import AddTransactionForm from '../AddTransactionForm/AddTransactionForm';
 import { useToast } from '../../hooks/useToast';
 import useTransactionFilters from '../../hooks/useTransactionFilters';
+// NEW: Import transaction modal hook
+import useTransactionModal from '../../hooks/useTransactionModal';
+// NEW: Import delete confirmation hook
+import useDeleteConfirmation from '../../hooks/useDeleteConfirmation';
 import TransactionToolbar from './TransactionToolbar';
 import './TransactionTable.css';
 import PlusIcon from '../../assets/Outline/Plus.svg';
@@ -14,31 +18,38 @@ import EditSquareIcon from '../../assets/Outline/Edit Square.svg';
 import DangerCircleIcon from '../../assets/Outline/Danger Circle.svg';
 
 const TransactionTable = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingTransaction, setEditingTransaction] = useState(null);
-
-  const [deleteConfirmation, setDeleteConfirmation] = useState({
-    show: false,
-    transactionId: null,
-  });
-  const [deleting, setDeleting] = useState(false);
-
-  const deleteButtonRef = useRef(null);
+  // NEW: Use transaction modal hook instead of local state
+  const {
+    isOpen: isModalOpen,
+    editingTransaction,
+    openAddModal,
+    openEditModal,
+    closeModal,
+  } = useTransactionModal();
 
   const { showErrorToast } = useToast();
-
   const { transactions, loading, error, fetchTransactions, deleteTransaction } =
     useContext(TransactionContext);
+
+  // NEW: Use delete confirmation hook
+  const deleteButtonRef = useRef(null);
+  const {
+    show: showDeleteModal,
+    deleting,
+    confirmDelete,
+    cancelDelete,
+    handleConfirmDelete,
+  } = useDeleteConfirmation(deleteTransaction, showErrorToast);
 
   // CHANGED: Use filtering & sorting hook – now also provides object states and setters for date picker
   const {
     filteredTransactions,
     sortOrder,
     setSortOrder,
-    fromDateObj, // NEW: object for date picker
-    toDateObj, // NEW: object for date picker
-    setFromDateObj, // NEW: direct setter for date picker
-    setToDateObj, // NEW: direct setter for date picker
+    fromDateObj,
+    toDateObj,
+    setFromDateObj,
+    setToDateObj,
   } = useTransactionFilters(transactions);
 
   const isEmpty = filteredTransactions.length === 0;
@@ -58,17 +69,20 @@ const TransactionTable = () => {
     handleClick: tooltipClick,
   } = useTooltip();
 
+  // NEW: Focus delete button when modal opens
   useEffect(() => {
-    if (deleteConfirmation.show && deleteButtonRef.current) {
+    if (showDeleteModal && deleteButtonRef.current) {
       deleteButtonRef.current.focus();
     }
-  }, [deleteConfirmation.show]);
+  }, [showDeleteModal]);
 
   // Merge close-handler for dropdown and tooltip
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (openMenuId !== null && menuRef.current && !menuRef.current.contains(event.target)) {
         setOpenMenuId(null);
+        // Reset menu direction when menu is closed by clicking outside
+        setMenuAbove(false);
       }
       if (
         tooltip.visible &&
@@ -88,12 +102,9 @@ const TransactionTable = () => {
     };
   }, [openMenuId, tooltip.visible, hideTooltip, tooltipTriggerRef]);
 
-  // Flip dropdown direction based on button position
+  // Flip dropdown direction based on button position (without calling setState for null case)
   useEffect(() => {
-    if (openMenuId === null) {
-      setMenuAbove(false);
-      return;
-    }
+    if (openMenuId === null) return;
 
     const timer = requestAnimationFrame(() => {
       const button = buttonRefs.current[openMenuId];
@@ -124,46 +135,13 @@ const TransactionTable = () => {
     return () => window.removeEventListener('scroll', handleScroll, true);
   }, [tooltip.visible, hideTooltip]);
 
-  // Modal & delete handlers
-  const handleOpenModal = () => {
-    setEditingTransaction(null);
-    setIsModalOpen(true);
-  };
-
-  const handleEditTransaction = (transaction) => {
-    setEditingTransaction(transaction);
-    setIsModalOpen(true);
-    setOpenMenuId(null);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setEditingTransaction(null);
-  };
-
-  const handleDeleteClick = (transactionId) => {
-    setDeleteConfirmation({ show: true, transactionId });
-    setOpenMenuId(null);
-  };
-
-  const handleConfirmDelete = async () => {
-    setDeleting(true);
-    try {
-      await deleteTransaction(deleteConfirmation.transactionId);
-      setDeleteConfirmation({ show: false, transactionId: null });
-    } catch {
-      showErrorToast('خطا در حذف تراکنش');
-    } finally {
-      setDeleting(false);
-    }
-  };
-
-  const handleCancelDelete = () => {
-    setDeleteConfirmation({ show: false, transactionId: null });
-  };
-
   const handleKebabClick = (id) => {
-    setOpenMenuId((prev) => (prev === id ? null : id));
+    setOpenMenuId((prev) => {
+      const newId = prev === id ? null : id;
+      // Reset menu direction when menu is being closed
+      if (newId === null) setMenuAbove(false);
+      return newId;
+    });
   };
 
   const KebabIcon = (
@@ -179,8 +157,8 @@ const TransactionTable = () => {
     fromDateObj,
     toDateObj,
     sortOrder,
-    onFromDateChange: setFromDateObj, // directly use hook's setter
-    onToDateChange: setToDateObj, // directly use hook's setter
+    onFromDateChange: setFromDateObj,
+    onToDateChange: setToDateObj,
     onSortOrderChange: setSortOrder,
   };
 
@@ -190,7 +168,7 @@ const TransactionTable = () => {
       <div className="table-container">
         <div className="table-header">
           <h2 className="table-title">تراکنش‌ها</h2>
-          <button className="add-transaction-button" onClick={handleOpenModal}>
+          <button className="add-transaction-button" onClick={openAddModal}>
             <img src={PlusIcon} alt="Plus" className="button-icon" />
             افزودن تراکنش
           </button>
@@ -209,7 +187,7 @@ const TransactionTable = () => {
       <div className="table-container">
         <div className="table-header">
           <h2 className="table-title">تراکنش‌ها</h2>
-          <button className="add-transaction-button" onClick={handleOpenModal}>
+          <button className="add-transaction-button" onClick={openAddModal}>
             <img src={PlusIcon} alt="Plus" className="button-icon" />
             افزودن تراکنش
           </button>
@@ -232,7 +210,7 @@ const TransactionTable = () => {
     <div className="table-container">
       <div className="table-header">
         <h2 className="table-title">تراکنش‌ها</h2>
-        <button className="add-transaction-button" onClick={handleOpenModal}>
+        <button className="add-transaction-button" onClick={openAddModal}>
           <img src={PlusIcon} alt="Plus" className="button-icon" />
           افزودن تراکنش
         </button>
@@ -327,14 +305,15 @@ const TransactionTable = () => {
                         >
                           <button
                             className="dropdown-item"
-                            onClick={() => handleEditTransaction(transaction)}
+                            onClick={() => openEditModal(transaction)}
                           >
                             <img src={EditSquareIcon} alt="ویرایش" className="dropdown-item-icon" />
                             <span>ویرایش</span>
                           </button>
                           <button
                             className="dropdown-item"
-                            onClick={() => handleDeleteClick(transaction.id)}
+                            // NEW: Use confirmDelete from hook
+                            onClick={() => confirmDelete(transaction.id)}
                           >
                             <img src={DeleteIcon} alt="حذف" className="dropdown-item-icon" />
                             <span>حذف</span>
@@ -350,25 +329,23 @@ const TransactionTable = () => {
         )}
       </div>
 
-      {/* Modals (unchanged) */}
+      {/* Modals - using closeModal from hook */}
       {isModalOpen && (
-        <Modal
-          title={editingTransaction ? 'ویرایش تراکنش' : 'افزودن تراکنش'}
-          onClose={handleCloseModal}
-        >
+        <Modal title={editingTransaction ? 'ویرایش تراکنش' : 'افزودن تراکنش'} onClose={closeModal}>
           <AddTransactionForm
             mode={editingTransaction ? 'edit' : 'add'}
             initialData={editingTransaction}
-            onCancel={handleCloseModal}
+            onCancel={closeModal}
           />
         </Modal>
       )}
 
-      {deleteConfirmation.show && (
-        <Modal title="" onClose={handleCancelDelete} className="delete-confirmation-modal">
+      {/* NEW: Delete confirmation modal using hook state */}
+      {showDeleteModal && (
+        <Modal title="" onClose={cancelDelete} className="delete-confirmation-modal">
           <p>آیا از حذف تراکنش اطمینان دارید؟</p>
           <div className="delete-actions">
-            <button className="cancel-button" onClick={handleCancelDelete} disabled={deleting}>
+            <button className="cancel-button" onClick={cancelDelete} disabled={deleting}>
               انصراف
             </button>
             <button
