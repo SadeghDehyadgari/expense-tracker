@@ -4,13 +4,13 @@ import '@amir04lm26/react-modern-calendar-date-picker/lib/DatePicker.css';
 import CalendarIcon from '../../assets/Outline/Calendar.svg';
 import ArrowDownIcon from '../../assets/Outline/Arrow - Down 2.svg';
 import { toPersianDigits } from '../../utils/formatters';
+import { formatJalaliDate } from '../../utils/jalaliDateUtils'; // NEW: import for formatting
 
+// CHANGED: Props now receive object and change handlers directly (string is derived internally)
 const TransactionToolbar = ({
-  fromDate,
-  toDate,
-  sortOrder,
   fromDateObj,
   toDateObj,
+  sortOrder,
   onFromDateChange,
   onToDateChange,
   onSortOrderChange,
@@ -18,17 +18,18 @@ const TransactionToolbar = ({
   const fromInputRef = useRef(null);
   const toInputRef = useRef(null);
 
-  // NEW: Helper to clear from date and add focus to allow calendar to close
+  // NEW: compute display strings from objects
+  const fromDisplay = fromDateObj ? toPersianDigits(formatJalaliDate(fromDateObj)) : '';
+  const toDisplay = toDateObj ? toPersianDigits(formatJalaliDate(toDateObj)) : '';
+
   const handleClearFromDate = (e) => {
     e.stopPropagation();
     onFromDateChange(null);
-    // Focus the input to release focus, so calendar can close on outside click
     if (fromInputRef.current) {
       fromInputRef.current.focus();
     }
   };
 
-  // NEW: Helper to clear to date and add focus
   const handleClearToDate = (e) => {
     e.stopPropagation();
     onToDateChange(null);
@@ -55,17 +56,16 @@ const TransactionToolbar = ({
               <>
                 <input
                   type="text"
-                  value={toPersianDigits(fromDate)}
+                  value={fromDisplay}
                   readOnly
                   placeholder="انتخاب کنید"
                   className="tx-filter-input"
                   ref={(el) => {
                     fromInputRef.current = el;
-                    // Handle both function ref and object ref to avoid "ref is not a function" error
                     ref.current = el;
                   }}
                 />
-                {fromDate ? (
+                {fromDateObj ? (
                   <button
                     type="button"
                     className="tx-filter-clear-icon"
@@ -106,7 +106,7 @@ const TransactionToolbar = ({
               <>
                 <input
                   type="text"
-                  value={toPersianDigits(toDate)}
+                  value={toDisplay}
                   readOnly
                   placeholder="انتخاب کنید"
                   className="tx-filter-input"
@@ -115,7 +115,7 @@ const TransactionToolbar = ({
                     ref.current = el;
                   }}
                 />
-                {toDate ? (
+                {toDateObj ? (
                   <button
                     type="button"
                     className="tx-filter-clear-icon"
@@ -148,7 +148,6 @@ const TransactionToolbar = ({
             value={sortOrder}
             onChange={(e) => onSortOrderChange(e.target.value)}
           >
-            {/* REMOVED disabled option because default is now 'newest' */}
             <option value="newest">جدیدترین</option>
             <option value="oldest">قدیمی‌ترین</option>
             <option value="highest">بیشترین مبلغ</option>

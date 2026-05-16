@@ -53,7 +53,7 @@ const useFetch = (url, timeout = 10000) => {
       } catch (err) {
         // CHANGED: always set error and re-throw to allow caller to handle (e.g., show toast)
         if (err.name !== 'AbortError') {
-          setError(err.message);
+          setError('خطا در ارتباط با سرور');
         } else {
           setError('درخواست با خطای timeout مواجه شد');
         }

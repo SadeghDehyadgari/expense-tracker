@@ -1,18 +1,12 @@
-// TransactionTable.jsx (fixed dropdown direction flip issue)
-import { useContext, useState, useEffect, useRef } from 'react'; // CHANGED: added useMemo
+import { useContext, useState, useEffect, useRef } from 'react';
 import TransactionContext from '../../context/TransactionContext';
 import { toPersianDigits, formatNumber, truncateWords } from '../../utils/formatters';
 import { useTooltip } from '../../hooks/useTooltip';
-// NEW: Imports needed for self‑contained modal handling
 import Modal from '../Modal/Modal';
 import AddTransactionForm from '../AddTransactionForm/AddTransactionForm';
 import { useToast } from '../../hooks/useToast';
-// NEW: Import custom hook for filtering/sorting
 import useTransactionFilters from '../../hooks/useTransactionFilters';
-// NEW: Import extracted toolbar component
 import TransactionToolbar from './TransactionToolbar';
-// NEW: Import formatJalaliDate helper
-import { formatJalaliDate } from '../../utils/jalaliDateUtils';
 import './TransactionTable.css';
 import PlusIcon from '../../assets/Outline/Plus.svg';
 import DeleteIcon from '../../assets/Outline/Delete.svg';
@@ -20,7 +14,6 @@ import EditSquareIcon from '../../assets/Outline/Edit Square.svg';
 import DangerCircleIcon from '../../assets/Outline/Danger Circle.svg';
 
 const TransactionTable = () => {
-  // CHANGED: All modal/delete state now lives here
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
 
@@ -32,22 +25,20 @@ const TransactionTable = () => {
 
   const deleteButtonRef = useRef(null);
 
-  // NEW: useToast for error toasts
   const { showErrorToast } = useToast();
 
-  // CHANGED: destructure all needed from context
   const { transactions, loading, error, fetchTransactions, deleteTransaction } =
     useContext(TransactionContext);
 
-  // NEW: Use filtering & sorting hook
+  // CHANGED: Use filtering & sorting hook – now also provides object states and setters for date picker
   const {
     filteredTransactions,
-    fromDate,
-    toDate,
     sortOrder,
-    setFromDate,
-    setToDate,
     setSortOrder,
+    fromDateObj, // NEW: object for date picker
+    toDateObj, // NEW: object for date picker
+    setFromDateObj, // NEW: direct setter for date picker
+    setToDateObj, // NEW: direct setter for date picker
   } = useTransactionFilters(transactions);
 
   const isEmpty = filteredTransactions.length === 0;
@@ -56,10 +47,6 @@ const TransactionTable = () => {
   const [menuAbove, setMenuAbove] = useState(false);
   const menuRef = useRef(null);
   const buttonRefs = useRef({});
-
-  // NEW: State for date picker objects (to display selected dates)
-  const [fromDateObj, setFromDateObj] = useState(null);
-  const [toDateObj, setToDateObj] = useState(null);
 
   // Tooltip logic (unchanged)
   const {
@@ -71,7 +58,6 @@ const TransactionTable = () => {
     handleClick: tooltipClick,
   } = useTooltip();
 
-  // Focus the delete confirmation button when it appears
   useEffect(() => {
     if (deleteConfirmation.show && deleteButtonRef.current) {
       deleteButtonRef.current.focus();
@@ -102,15 +88,13 @@ const TransactionTable = () => {
     };
   }, [openMenuId, tooltip.visible, hideTooltip, tooltipTriggerRef]);
 
-  // FIXED: Flip dropdown direction based on button position, not dropdown itself
+  // Flip dropdown direction based on button position
   useEffect(() => {
     if (openMenuId === null) {
-      // Reset direction when menu closes to avoid stale state
       setMenuAbove(false);
       return;
     }
 
-    // Use requestAnimationFrame to ensure DOM is ready
     const timer = requestAnimationFrame(() => {
       const button = buttonRefs.current[openMenuId];
       if (!button) return;
@@ -120,11 +104,10 @@ const TransactionTable = () => {
 
       const buttonRect = button.getBoundingClientRect();
       const containerRect = scrollContainer.getBoundingClientRect();
-      const dropdownHeight = 100; // Approximate height of dropdown menu (adjust based on CSS)
+      const dropdownHeight = 100;
       const spaceBelow = containerRect.bottom - buttonRect.bottom;
       const spaceAbove = buttonRect.top - containerRect.top;
 
-      // Show above if there is not enough space below, otherwise show below
       setMenuAbove(spaceBelow < dropdownHeight && spaceAbove > spaceBelow);
     });
 
@@ -141,8 +124,7 @@ const TransactionTable = () => {
     return () => window.removeEventListener('scroll', handleScroll, true);
   }, [tooltip.visible, hideTooltip]);
 
-  // ---------- Modal & delete handlers ----------
-
+  // Modal & delete handlers
   const handleOpenModal = () => {
     setEditingTransaction(null);
     setIsModalOpen(true);
@@ -180,7 +162,6 @@ const TransactionTable = () => {
     setDeleteConfirmation({ show: false, transactionId: null });
   };
 
-  // Kebab menu handlers
   const handleKebabClick = (id) => {
     setOpenMenuId((prev) => (prev === id ? null : id));
   };
@@ -193,42 +174,17 @@ const TransactionTable = () => {
     </svg>
   );
 
-  // NEW: Handlers for date pickers using shared helper
-  const handleFromDateChange = (selectedDay) => {
-    if (selectedDay) {
-      const formatted = formatJalaliDate(selectedDay);
-      setFromDate(formatted);
-      setFromDateObj(selectedDay);
-    } else {
-      setFromDate('');
-      setFromDateObj(null);
-    }
-  };
-
-  const handleToDateChange = (selectedDay) => {
-    if (selectedDay) {
-      const formatted = formatJalaliDate(selectedDay);
-      setToDate(formatted);
-      setToDateObj(selectedDay);
-    } else {
-      setToDate('');
-      setToDateObj(null);
-    }
-  };
-
-  // NEW: Create an object of toolbar props to avoid repetition
+  // NEW: toolbar props using hook's object states and setters directly
   const toolbarProps = {
-    fromDate,
-    toDate,
-    sortOrder,
     fromDateObj,
     toDateObj,
-    onFromDateChange: handleFromDateChange,
-    onToDateChange: handleToDateChange,
+    sortOrder,
+    onFromDateChange: setFromDateObj, // directly use hook's setter
+    onToDateChange: setToDateObj, // directly use hook's setter
     onSortOrderChange: setSortOrder,
   };
 
-  // ---- Loading state (with toolbar) ----
+  // Loading state (with toolbar)
   if (loading) {
     return (
       <div className="table-container">
@@ -247,7 +203,7 @@ const TransactionTable = () => {
     );
   }
 
-  // ---- Error state (with toolbar) ----
+  // Error state (with toolbar)
   if (error) {
     return (
       <div className="table-container">
@@ -271,7 +227,7 @@ const TransactionTable = () => {
     );
   }
 
-  // ---- Main render (with toolbar and filtered transactions) ----
+  // Main render (with toolbar and filtered transactions)
   return (
     <div className="table-container">
       <div className="table-header">
@@ -394,7 +350,7 @@ const TransactionTable = () => {
         )}
       </div>
 
-      {/* ===== MODALS (unchanged) ===== */}
+      {/* Modals (unchanged) */}
       {isModalOpen && (
         <Modal
           title={editingTransaction ? 'ویرایش تراکنش' : 'افزودن تراکنش'}

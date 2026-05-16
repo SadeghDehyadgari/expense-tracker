@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { formatJalaliDate } from '../utils/jalaliDateUtils'; // NEW: import date utils
 
 /**
  * Custom hook for filtering and sorting transactions.
@@ -8,10 +9,26 @@ import { useState, useMemo } from 'react';
  * @returns {Object} - filteredTransactions, filter states, and setter functions
  */
 const useTransactionFilters = (transactions) => {
-  const [fromDate, setFromDate] = useState('');
+  const [fromDate, setFromDate] = useState(''); // CHANGED: rename to avoid conflict
   const [toDate, setToDate] = useState('');
-  // CHANGED: default sortOrder is now 'newest' to show latest transactions first by default
   const [sortOrder, setSortOrder] = useState('newest'); // 'newest', 'oldest', 'highest', 'lowest'
+  // NEW: object states for date picker
+  const [fromDateObj, setFromDateObjState] = useState(null);
+  const [toDateObj, setToDateObjState] = useState(null);
+
+  // NEW: setFromDateObj – for direct use by date picker
+  const setFromDateObj = (dateObj) => {
+    setFromDateObjState(dateObj);
+    const formatted = formatJalaliDate(dateObj);
+    setFromDate(formatted);
+  };
+
+  // NEW: setToDateObj – for direct use by date picker
+  const setToDateObj = (dateObj) => {
+    setToDateObjState(dateObj);
+    const formatted = formatJalaliDate(dateObj);
+    setToDate(formatted);
+  };
 
   const filteredTransactions = useMemo(() => {
     let filtered = [...transactions];
@@ -24,7 +41,7 @@ const useTransactionFilters = (transactions) => {
       filtered = filtered.filter((t) => t.date <= toDate);
     }
 
-    // Sort only if a valid sortOrder is selected (not empty)
+    // Sort only if a valid sortOrder is selected
     if (sortOrder === 'newest') {
       filtered.sort((a, b) => b.date.localeCompare(a.date));
     } else if (sortOrder === 'oldest') {
@@ -34,19 +51,19 @@ const useTransactionFilters = (transactions) => {
     } else if (sortOrder === 'lowest') {
       filtered.sort((a, b) => a.income + a.expense - (b.income + b.expense));
     }
-    // If sortOrder is empty, do not sort (keep original order from context)
 
     return filtered;
   }, [transactions, fromDate, toDate, sortOrder]);
 
   return {
     filteredTransactions,
-    fromDate,
-    toDate,
     sortOrder,
-    setFromDate,
-    setToDate,
     setSortOrder,
+    // NEW: exports for date picker
+    fromDateObj,
+    toDateObj,
+    setFromDateObj,
+    setToDateObj,
   };
 };
 

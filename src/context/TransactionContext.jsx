@@ -61,6 +61,15 @@ export const TransactionProvider = ({ children }) => {
     [refetch, showErrorToast]
   );
 
+  // NEW: expose refetch as fetchTransactions to fix "Retry" button in Dashboard and TransactionTable
+  const fetchTransactions = useCallback(async () => {
+    try {
+      await refetch();
+    } catch {
+      // Error already handled inside useFetch, but we keep silent to avoid double toast
+    }
+  }, [refetch]);
+
   const contextValue = useMemo(
     () => ({
       transactions,
@@ -69,8 +78,17 @@ export const TransactionProvider = ({ children }) => {
       addTransaction,
       editTransaction,
       deleteTransaction,
+      fetchTransactions, // NEW: added to context for manual retry
     }),
-    [transactions, loading, error, addTransaction, editTransaction, deleteTransaction]
+    [
+      transactions,
+      loading,
+      error,
+      addTransaction,
+      editTransaction,
+      deleteTransaction,
+      fetchTransactions,
+    ]
   );
 
   return <TransactionContext.Provider value={contextValue}>{children}</TransactionContext.Provider>;
