@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef } from 'react';
+import { useContext, useState, useEffect, useRef } from 'react';
 import TransactionContext from '../../context/TransactionContext';
 import { toPersianDigits, formatNumber, truncateWords } from '../../utils/formatters';
 import { useTooltip } from '../../hooks/useTooltip';
@@ -10,8 +10,6 @@ import useTransactionFilters from '../../hooks/useTransactionFilters';
 import useTransactionModal from '../../hooks/useTransactionModal';
 // NEW: Import delete confirmation hook
 import useDeleteConfirmation from '../../hooks/useDeleteConfirmation';
-// NEW: Import kebab menu hook
-import useKebabMenu from '../../hooks/useKebabMenu';
 import TransactionToolbar from './TransactionToolbar';
 import './TransactionTable.css';
 import PlusIcon from '../../assets/Outline/Plus.svg';
@@ -34,7 +32,6 @@ const TransactionTable = () => {
     useContext(TransactionContext);
 
   // NEW: Use delete confirmation hook
-  const deleteButtonRef = useRef(null);
   const {
     show: showDeleteModal,
     deleting,
@@ -54,11 +51,12 @@ const TransactionTable = () => {
     setToDateObj,
   } = useTransactionFilters(transactions);
 
-  // NEW: Use kebab menu hook
-  const { openMenuId, menuAbove, menuRef, buttonRefs, handleKebabClick, closeMenu } =
-    useKebabMenu();
-
   const isEmpty = filteredTransactions.length === 0;
+
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const [menuAbove, setMenuAbove] = useState(false);
+  const menuRef = useRef(null);
+  const buttonRefs = useRef({});
 
   // Tooltip logic (unchanged)
   const {
@@ -70,16 +68,14 @@ const TransactionTable = () => {
     handleClick: tooltipClick,
   } = useTooltip();
 
-  // NEW: Focus delete button when modal opens
-  useEffect(() => {
-    if (showDeleteModal && deleteButtonRef.current) {
-      deleteButtonRef.current.focus();
-    }
-  }, [showDeleteModal]);
-
-  // Merge close-handler for dropdown and tooltip (only tooltip outside click remains)
+  // Merge close-handler for dropdown and tooltip
   useEffect(() => {
     const handleClickOutside = (event) => {
+      if (openMenuId !== null && menuRef.current && !menuRef.current.contains(event.target)) {
+        setOpenMenuId(null);
+        // Reset menu direction when menu is closed by clicking outside
+        setMenuAbove(false);
+      }
       if (
         tooltip.visible &&
         tooltipTriggerRef.current &&
@@ -89,14 +85,37 @@ const TransactionTable = () => {
       }
     };
 
-    if (tooltip.visible) {
+    if (openMenuId !== null || tooltip.visible) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [tooltip.visible, hideTooltip, tooltipTriggerRef]);
+  }, [openMenuId, tooltip.visible, hideTooltip, tooltipTriggerRef]);
+
+  // Flip dropdown direction based on button position (without calling setState for null case)
+  useEffect(() => {
+    if (openMenuId === null) return;
+
+    const timer = requestAnimationFrame(() => {
+      const button = buttonRefs.current[openMenuId];
+      if (!button) return;
+
+      const scrollContainer = button.closest('.table-content.with-transactions');
+      if (!scrollContainer) return;
+
+      const buttonRect = button.getBoundingClientRect();
+      const containerRect = scrollContainer.getBoundingClientRect();
+      const dropdownHeight = 100;
+      const spaceBelow = containerRect.bottom - buttonRect.bottom;
+      const spaceAbove = buttonRect.top - containerRect.top;
+
+      setMenuAbove(spaceBelow < dropdownHeight && spaceAbove > spaceBelow);
+    });
+
+    return () => cancelAnimationFrame(timer);
+  }, [openMenuId]);
 
   // Hide tooltip on scroll
   useEffect(() => {
@@ -108,6 +127,15 @@ const TransactionTable = () => {
     return () => window.removeEventListener('scroll', handleScroll, true);
   }, [tooltip.visible, hideTooltip]);
 
+  const handleKebabClick = (id) => {
+    setOpenMenuId((prev) => {
+      const newId = prev === id ? null : id;
+      // Reset menu direction when menu is being closed
+      if (newId === null) setMenuAbove(false);
+      return newId;
+    });
+  };
+
   const KebabIcon = (
     <svg width="4" height="16" viewBox="0 0 4 16" fill="none" xmlns="http://www.w3.org/2000/svg">
       <circle cx="2" cy="2" r="1.5" fill="#6B7580" />
@@ -116,7 +144,7 @@ const TransactionTable = () => {
     </svg>
   );
 
-  // toolbar props using hook's object states and setters directly
+  // NEW: toolbar props using hook's object states and setters directly
   const toolbarProps = {
     fromDateObj,
     toDateObj,
@@ -252,7 +280,10 @@ const TransactionTable = () => {
                       <button
                         className="kebab-button"
                         ref={(el) => (buttonRefs.current[transaction.id] = el)}
-                        onClick={(e) => handleKebabClick(transaction.id, e)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleKebabClick(transaction.id);
+                        }}
                         aria-label="منوی اقدامات"
                       >
                         {KebabIcon}
@@ -266,20 +297,15 @@ const TransactionTable = () => {
                         >
                           <button
                             className="dropdown-item"
-                            onClick={() => {
-                              openEditModal(transaction);
-                              closeMenu();
-                            }}
+                            onClick={() => openEditModal(transaction)}
                           >
                             <img src={EditSquareIcon} alt="ویرایش" className="dropdown-item-icon" />
                             <span>ویرایش</span>
                           </button>
                           <button
                             className="dropdown-item"
-                            onClick={() => {
-                              confirmDelete(transaction.id);
-                              closeMenu();
-                            }}
+                            // NEW: Use confirmDelete from hook
+                            onClick={() => confirmDelete(transaction.id)}
                           >
                             <img src={DeleteIcon} alt="حذف" className="dropdown-item-icon" />
                             <span>حذف</span>
@@ -317,7 +343,7 @@ const TransactionTable = () => {
             <button
               className="delete-confirm-button"
               onClick={handleConfirmDelete}
-              ref={deleteButtonRef}
+              autoFocus // NEW: auto-focus on mount (modal renders conditionally)
               disabled={deleting}
             >
               {deleting ? 'در حال حذف...' : 'حذف'}
