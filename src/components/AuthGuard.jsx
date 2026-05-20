@@ -1,4 +1,3 @@
-// NEW: Generic authentication guard - replaces ProtectedRoute and PublicRoute
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 

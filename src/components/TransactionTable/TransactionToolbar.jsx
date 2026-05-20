@@ -150,8 +150,8 @@ const TransactionToolbar = ({
           >
             <option value="newest">جدیدترین</option>
             <option value="oldest">قدیمی‌ترین</option>
-            <option value="highest">بیشترین مبلغ</option>
-            <option value="lowest">کمترین مبلغ</option>
+            <option value="highest">بیشترین</option>
+            <option value="lowest">کمترین</option>
           </select>
           <img src={ArrowDownIcon} alt="dropdown" className="tx-filter-select-icon" />
         </div>

@@ -1,4 +1,4 @@
-import { useContext, useEffect } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import TransactionContext from '../../context/TransactionContext';
 import { toPersianDigits, formatNumber, truncateWords } from '../../utils/formatters';
 import { useTooltip } from '../../hooks/useTooltip';
@@ -6,12 +6,12 @@ import Modal from '../Modal/Modal';
 import AddTransactionForm from '../AddTransactionForm/AddTransactionForm';
 import { useToast } from '../../hooks/useToast';
 import useTransactionFilters from '../../hooks/useTransactionFilters';
-// NEW: Import transaction modal hook
 import useTransactionModal from '../../hooks/useTransactionModal';
-// NEW: Import delete confirmation hook
 import useDeleteConfirmation from '../../hooks/useDeleteConfirmation';
-// NEW: Import kebab menu hook
 import useKebabMenu from '../../hooks/useKebabMenu';
+// NEW: Import pagination hook and component
+import usePagination from '../../hooks/usePagination';
+import Pagination from '../Pagination/Pagination';
 import TransactionToolbar from './TransactionToolbar';
 import './TransactionTable.css';
 import PlusIcon from '../../assets/Outline/Plus.svg';
@@ -20,7 +20,17 @@ import EditSquareIcon from '../../assets/Outline/Edit Square.svg';
 import DangerCircleIcon from '../../assets/Outline/Danger Circle.svg';
 
 const TransactionTable = () => {
-  // NEW: Use transaction modal hook instead of local state
+  // NEW: Responsive page size detection
+  const [pageSize, setPageSize] = useState(window.innerWidth < 768 ? 8 : 13);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setPageSize(window.innerWidth < 768 ? 8 : 13);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const {
     isOpen: isModalOpen,
     editingTransaction,
@@ -33,7 +43,6 @@ const TransactionTable = () => {
   const { transactions, loading, error, fetchTransactions, deleteTransaction } =
     useContext(TransactionContext);
 
-  // NEW: Use delete confirmation hook
   const {
     show: showDeleteModal,
     deleting,
@@ -42,7 +51,6 @@ const TransactionTable = () => {
     handleConfirmDelete,
   } = useDeleteConfirmation(deleteTransaction, showErrorToast);
 
-  // CHANGED: Use filtering & sorting hook – now also provides object states and setters for date picker
   const {
     filteredTransactions,
     sortOrder,
@@ -53,13 +61,15 @@ const TransactionTable = () => {
     setToDateObj,
   } = useTransactionFilters(transactions);
 
-  // NEW: Use kebab menu hook
+  // NEW: Use pagination hook with filtered transactions and dynamic page size
+  const { currentItems, currentPage, totalPages, pageNumbers, goToPage, nextPage, prevPage } =
+    usePagination(filteredTransactions, pageSize);
+
   const { openMenuId, menuAbove, menuRef, buttonRefs, handleKebabClick, closeMenu } =
     useKebabMenu();
 
   const isEmpty = filteredTransactions.length === 0;
 
-  // Tooltip logic (unchanged)
   const {
     tooltip,
     triggerRef: tooltipTriggerRef,
@@ -69,7 +79,6 @@ const TransactionTable = () => {
     handleClick: tooltipClick,
   } = useTooltip();
 
-  // Merge close-handler for tooltip only (dropdown handled by useKebabMenu)
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -90,7 +99,6 @@ const TransactionTable = () => {
     };
   }, [tooltip.visible, hideTooltip, tooltipTriggerRef]);
 
-  // Hide tooltip on scroll
   useEffect(() => {
     if (!tooltip.visible) return;
 
@@ -108,7 +116,6 @@ const TransactionTable = () => {
     </svg>
   );
 
-  // toolbar props using hook's object states and setters directly
   const toolbarProps = {
     fromDateObj,
     toDateObj,
@@ -118,7 +125,6 @@ const TransactionTable = () => {
     onSortOrderChange: setSortOrder,
   };
 
-  // Loading state (with toolbar)
   if (loading) {
     return (
       <div className="table-container">
@@ -137,7 +143,6 @@ const TransactionTable = () => {
     );
   }
 
-  // Error state (with toolbar)
   if (error) {
     return (
       <div className="table-container">
@@ -161,7 +166,6 @@ const TransactionTable = () => {
     );
   }
 
-  // Main render (with toolbar and filtered transactions)
   return (
     <div className="table-container">
       <div className="table-header">
@@ -181,113 +185,132 @@ const TransactionTable = () => {
             <p className="empty-state-text">شما هنوز تراکنشی وارد نکرده‌اید</p>
           </div>
         ) : (
-          <table className="transaction-table">
-            <thead>
-              <tr>
-                <th className="header-date">تاریخ</th>
-                <th className="header-income">درآمد (تومان)</th>
-                <th className="header-expense">هزینه (تومان)</th>
-                <th className="header-description">شرح</th>
-                <th className="header-actions"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredTransactions.map((transaction) => {
-                const truncatedDesc = truncateWords(transaction.description, 5);
-                const hasMoreWords =
-                  transaction.description && transaction.description.split(' ').length > 5;
+          <>
+            <table className="transaction-table">
+              <thead>
+                <tr>
+                  <th className="header-date">تاریخ</th>
+                  <th className="header-income">درآمد (تومان)</th>
+                  <th className="header-expense">هزینه (تومان)</th>
+                  <th className="header-description">شرح</th>
+                  <th className="header-actions"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {/* CHANGED: Use currentItems instead of filteredTransactions */}
+                {currentItems.map((transaction) => {
+                  const truncatedDesc = truncateWords(transaction.description, 5);
+                  const hasMoreWords =
+                    transaction.description && transaction.description.split(' ').length > 5;
 
-                return (
-                  <tr key={transaction.id}>
-                    <td className="cell-date">{toPersianDigits(transaction.date)}</td>
-                    <td className="cell-income">
-                      {transaction.income > 0 ? (
-                        <>
-                          {formatNumber(transaction.income)}+
-                          <span className="currency-label"> تومان</span>
-                        </>
-                      ) : null}
-                    </td>
-                    <td className="cell-expense">
-                      {transaction.expense > 0 ? (
-                        <>
-                          {formatNumber(transaction.expense)}-
-                          <span className="currency-label"> تومان</span>
-                        </>
-                      ) : null}
-                    </td>
-                    <td className="cell-description">
-                      {transaction.description ? (
-                        hasMoreWords ? (
-                          <span
-                            className="description-text has-tooltip"
-                            onClick={tooltipClick(transaction.description)}
-                            onMouseEnter={tooltipMouseEnter(transaction.description)}
-                            onMouseLeave={tooltipMouseLeave}
-                            ref={
-                              tooltip.visible && tooltip.text === transaction.description
-                                ? tooltipTriggerRef
-                                : null
-                            }
-                            aria-label={transaction.description}
-                          >
-                            {truncatedDesc}
-                          </span>
-                        ) : (
-                          <span className="description-text" aria-label={transaction.description}>
-                            {truncatedDesc}
-                          </span>
-                        )
-                      ) : null}
-                    </td>
-                    <td className="cell-actions">
-                      <button
-                        className="kebab-button"
-                        ref={(el) => (buttonRefs.current[transaction.id] = el)}
-                        onClick={(e) => handleKebabClick(transaction.id, e)}
-                        aria-label="منوی اقدامات"
-                      >
-                        {KebabIcon}
-                      </button>
-
-                      {openMenuId === transaction.id && (
-                        <div
-                          ref={menuRef}
-                          className={`dropdown-menu ${menuAbove ? 'dropdown-menu-above' : ''}`}
-                          onClick={(e) => e.stopPropagation()}
+                  return (
+                    <tr key={transaction.id}>
+                      <td className="cell-date">{toPersianDigits(transaction.date)}</td>
+                      <td className="cell-income">
+                        {transaction.income > 0 ? (
+                          <>
+                            {formatNumber(transaction.income)}+
+                            <span className="currency-label"> تومان</span>
+                          </>
+                        ) : null}
+                      </td>
+                      <td className="cell-expense">
+                        {transaction.expense > 0 ? (
+                          <>
+                            {formatNumber(transaction.expense)}-
+                            <span className="currency-label"> تومان</span>
+                          </>
+                        ) : null}
+                      </td>
+                      <td className="cell-description">
+                        {transaction.description ? (
+                          hasMoreWords ? (
+                            <span
+                              className="description-text has-tooltip"
+                              onClick={tooltipClick(transaction.description)}
+                              onMouseEnter={tooltipMouseEnter(transaction.description)}
+                              onMouseLeave={tooltipMouseLeave}
+                              ref={
+                                tooltip.visible && tooltip.text === transaction.description
+                                  ? tooltipTriggerRef
+                                  : null
+                              }
+                              aria-label={transaction.description}
+                            >
+                              {truncatedDesc}
+                            </span>
+                          ) : (
+                            <span className="description-text" aria-label={transaction.description}>
+                              {truncatedDesc}
+                            </span>
+                          )
+                        ) : null}
+                      </td>
+                      <td className="cell-actions">
+                        <button
+                          className="kebab-button"
+                          ref={(el) => (buttonRefs.current[transaction.id] = el)}
+                          onClick={(e) => handleKebabClick(transaction.id, e)}
+                          aria-label="منوی اقدامات"
                         >
-                          <button
-                            className="dropdown-item"
-                            onClick={() => {
-                              openEditModal(transaction);
-                              closeMenu();
-                            }}
+                          {KebabIcon}
+                        </button>
+
+                        {openMenuId === transaction.id && (
+                          <div
+                            ref={menuRef}
+                            className={`dropdown-menu ${menuAbove ? 'dropdown-menu-above' : ''}`}
+                            onClick={(e) => e.stopPropagation()}
                           >
-                            <img src={EditSquareIcon} alt="ویرایش" className="dropdown-item-icon" />
-                            <span>ویرایش</span>
-                          </button>
-                          <button
-                            className="dropdown-item"
-                            onClick={() => {
-                              confirmDelete(transaction.id);
-                              closeMenu();
-                            }}
-                          >
-                            <img src={DeleteIcon} alt="حذف" className="dropdown-item-icon" />
-                            <span>حذف</span>
-                          </button>
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                            <button
+                              className="dropdown-item"
+                              onClick={() => {
+                                openEditModal(transaction);
+                                closeMenu();
+                              }}
+                            >
+                              <img
+                                src={EditSquareIcon}
+                                alt="ویرایش"
+                                className="dropdown-item-icon"
+                              />
+                              <span>ویرایش</span>
+                            </button>
+                            <button
+                              className="dropdown-item"
+                              onClick={() => {
+                                confirmDelete(transaction.id);
+                                closeMenu();
+                              }}
+                            >
+                              <img src={DeleteIcon} alt="حذف" className="dropdown-item-icon" />
+                              <span>حذف</span>
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            {/* NEW: Pagination component - show only if there are transactions and more than one page */}
+            {filteredTransactions.length > 0 && totalPages > 1 && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                pageNumbers={pageNumbers}
+                onPageChange={goToPage}
+                onNext={nextPage}
+                onPrev={prevPage}
+                hasNext={currentPage < totalPages}
+                hasPrev={currentPage > 1}
+              />
+            )}
+          </>
         )}
       </div>
 
-      {/* Modals - using closeModal from hook */}
       {isModalOpen && (
         <Modal title={editingTransaction ? 'ویرایش تراکنش' : 'افزودن تراکنش'} onClose={closeModal}>
           <AddTransactionForm
@@ -298,7 +321,6 @@ const TransactionTable = () => {
         </Modal>
       )}
 
-      {/* NEW: Delete confirmation modal using hook state */}
       {showDeleteModal && (
         <Modal title="" onClose={cancelDelete} className="delete-confirmation-modal">
           <p>آیا از حذف تراکنش اطمینان دارید؟</p>
@@ -318,7 +340,6 @@ const TransactionTable = () => {
         </Modal>
       )}
 
-      {/* Tooltip portal (unchanged) */}
       {tooltip.visible && (
         <div
           id={`tooltip-${tooltip.text.replace(/\s/g, '')}`}

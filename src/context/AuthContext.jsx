@@ -1,4 +1,4 @@
-import React, { createContext, useState, useCallback, useMemo } from 'react';
+import { createContext, useState, useCallback, useMemo } from 'react';
 
 // NEW: Auth context for authentication state management
 export const AuthContext = createContext();
