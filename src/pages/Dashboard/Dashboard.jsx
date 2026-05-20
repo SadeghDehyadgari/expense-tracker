@@ -77,6 +77,16 @@ const Dashboard = () => {
 
   const { totalIncome, totalExpense, balance } = totals;
 
+  // NEW: Dynamic interval for XAxis based on chart data length
+  const xAxisInterval = (() => {
+    const dataLength = chartData.length;
+    if (dataLength > 15) {
+      // Show roughly every 10th label, but at least 1
+      return Math.max(1, Math.floor(dataLength / 10));
+    }
+    return 0; // show all labels
+  })();
+
   // Loading state (unchanged)
   if (loading) {
     return (
@@ -200,7 +210,7 @@ const Dashboard = () => {
                   outerRadius={90}
                   fill="#8884d8"
                   dataKey="value"
-                  label={renderPieLabel} // CHANGED: uses module-level function, no useCallback
+                  label={renderPieLabel}
                 >
                   {pieData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
@@ -243,8 +253,8 @@ const Dashboard = () => {
                   <XAxis
                     dataKey={timeRange === 'month' ? 'day' : 'month'}
                     angle={-45}
-                    textAnchor="end"
-                    interval={0}
+                    textAnchor={'end'}
+                    interval={xAxisInterval}
                     height={70}
                     tick={{ fontSize: 12, fontFamily: 'var(--font-family)' }}
                     tickMargin={15}
@@ -272,8 +282,10 @@ const Dashboard = () => {
                     }}
                   />
                   <Legend wrapperStyle={{ paddingTop: 20 }} />
-                  <Bar dataKey="income" fill={COLORS.green} name="درآمد" barSize={40} />
-                  <Bar dataKey="expense" fill={COLORS.red} name="هزینه" barSize={40} />
+                  <Bar dataKey="income" fill={COLORS.green} name="درآمد" barSize={20} />{' '}
+                  {/* CHANGED: reduced barSize from 40 to 20 */}
+                  <Bar dataKey="expense" fill={COLORS.red} name="هزینه" barSize={20} />{' '}
+                  {/* CHANGED: reduced barSize from 40 to 20 */}
                 </BarChart>
               </ResponsiveContainer>
             </div>
