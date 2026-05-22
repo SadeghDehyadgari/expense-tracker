@@ -69,6 +69,7 @@
   background-color: var(--neutrals-white);
   transition: border-color 0.2s;
   text-align: left;
+  direction: ltr;
 }
 
 .login-input:focus {
