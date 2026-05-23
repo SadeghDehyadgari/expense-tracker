@@ -18,12 +18,25 @@ export const AuthProvider = ({ children }) => {
     return null;
   });
 
-  // Login command: validates email/password and stores user
+  // MODIFIED: Login command validates credentials against json-server /users endpoint
+  // No unnecessary try/catch wrapper - errors propagate naturally to caller
   const login = useCallback(async (email, password) => {
-    if (!email || !email.includes('@') || !password || password.length < 3) {
+    // NEW: Fetch users from json-server
+    const response = await fetch('/api/users');
+    if (!response.ok) {
+      throw new Error('خطا در ارتباط با سرور');
+    }
+
+    const users = await response.json();
+    // NEW: Find user with matching email and password
+    const foundUser = users.find((u) => u.email === email && u.password === password);
+
+    if (!foundUser) {
       throw new Error('ایمیل یا رمز ورود اشتباه است!');
     }
-    const userObj = { email };
+
+    // NEW: Store only safe user data (exclude password)
+    const userObj = { id: foundUser.id, email: foundUser.email };
     setUser(userObj);
     localStorage.setItem('auth_user', JSON.stringify(userObj));
   }, []);
