@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react'; // CHANGED: removed useRef
 
 /**
  * Custom hook for pagination logic.
@@ -12,29 +12,16 @@ import { useState, useMemo, useRef, useEffect } from 'react';
 const usePagination = (items, pageSize) => {
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Track previous dependencies to avoid unnecessary resets
-  const prevItemsRef = useRef(items);
-  const prevPageSizeRef = useRef(pageSize);
-
-  // Reset to first page only when items or pageSize actually change and current page is not already 1
+  // NEW: Directly reset to page 1 whenever items or pageSize change.
+  //      setCurrentPage(1) does NOT cause an extra render if already 1.
   useEffect(() => {
-    const itemsChanged = prevItemsRef.current !== items;
-    const pageSizeChanged = prevPageSizeRef.current !== pageSize;
-
-    if ((itemsChanged || pageSizeChanged) && currentPage !== 1) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setCurrentPage(1);
-    }
-
-    prevItemsRef.current = items;
-    prevPageSizeRef.current = pageSize;
-  }, [items, pageSize, currentPage]);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCurrentPage(1);
+  }, [items, pageSize]);
 
   // NEW: Direct computation of totalPages (no useEffect needed)
   const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
 
-  // NEW: Direct computation of safe current page – this replaces the second useEffect
-  // OLD: used to have a useEffect that corrected out-of-range pages
   // NEW: we clamp the page to valid range directly during render
   const safeCurrentPage = Math.min(currentPage, totalPages);
 
@@ -70,21 +57,18 @@ const usePagination = (items, pageSize) => {
     return pages;
   }, [safeCurrentPage, totalPages]);
 
-  // Command: go to specific page
   const goToPage = (page) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
     }
   };
 
-  // Command: go to next page
   const nextPage = () => {
     if (safeCurrentPage < totalPages) {
       setCurrentPage(safeCurrentPage + 1);
     }
   };
 
-  // Command: go to previous page
   const prevPage = () => {
     if (safeCurrentPage > 1) {
       setCurrentPage(safeCurrentPage - 1);
@@ -92,7 +76,7 @@ const usePagination = (items, pageSize) => {
   };
 
   return {
-    currentPage: safeCurrentPage, // OLD: returned currentPage directly, NEW: returns clamped version
+    currentPage: safeCurrentPage,
     totalPages,
     currentItems,
     pageNumbers,
