@@ -1,5 +1,5 @@
 .layout {
-  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
 }
@@ -20,6 +20,7 @@
   display: flex;
   align-items: center;
   justify-content: flex-start;
+  gap: 2rem;
 }
 
 .header-nav {
@@ -54,18 +55,53 @@
   height: 100%;
 }
 
+/* NEW: Logout button with primary brand color and hover effect */
+.logout-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  transition: background-color 0.2s ease;
+  margin-right: auto; /* pushes to right in RTL layout */
+}
+
+.logout-button:hover {
+  background-color: var(--neutrals-soft-grey-2);
+}
+
+.logout-button img {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
 @media (max-width: 768px) {
   .header {
-    padding: 0 1rem 0 0;
+    padding: 0 1rem;
     height: 3.5rem;
   }
 
   .header-container {
     justify-content: space-between;
+    gap: 1rem;
   }
 
   .nav-link {
     padding: 0 0.875rem;
     font-size: 0.8125rem;
+  }
+
+  .logout-button {
+    margin-right: 0;
+    padding: 0.25rem;
+  }
+}
+
+@media (max-width: 320px) {
+  .nav-link {
+    text-align: center;
   }
 }

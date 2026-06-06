@@ -25,3 +25,13 @@ textarea,
 select {
   text-align: right;
 }
+
+/* NEW: Shared .error-message style used in Dashboard and TransactionTable error states */
+/* This avoids duplicate definitions in component CSS files and prevents conflict with form-error-message */
+.error-message {
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  color: var(--neutrals-dark-2);
+  margin: 0;
+  text-align: center;
+}

@@ -1,76 +1,78 @@
 import { useState, useContext } from 'react';
 import TransactionContext from '../../context/TransactionContext';
-import './AddTransactionForm.css';
+import DatePicker from '@amir04lm26/react-modern-calendar-date-picker';
+import '@amir04lm26/react-modern-calendar-date-picker/lib/DatePicker.css';
 import CalendarIcon from '../../assets/Outline/Calendar.svg';
+import { toEnglishDigits } from '../../utils/formatters';
+// CHANGED: import formatJalaliDate from jalaliDateUtils
+import { parseDateString, formatJalaliDate } from '../../utils/jalaliDateUtils';
+import { getAmountError } from '../../utils/validators';
+// NEW: import toast hook to show errors caught from context commands
+import { useToast } from '../../hooks/useToast';
+// NEW: Import Persian digits converter
+import { toPersianDigits } from '../../utils/formatters';
+import './AddTransactionForm.css';
 
-// ADDED: Convert Persian and Arabic digits to English
-const toEnglishDigits = (str) => {
-  if (!str) return '';
+const AddTransactionForm = ({ onCancel, mode = 'add', initialData = null }) => {
+  const { addTransaction, editTransaction } = useContext(TransactionContext);
+  // NEW: useToast for displaying errors in the catch block
+  const { showErrorToast } = useToast();
 
-  const digitMap = {
-    '۰': '0',
-    '٠': '0',
-    '۱': '1',
-    '١': '1',
-    '۲': '2',
-    '٢': '2',
-    '۳': '3',
-    '٣': '3',
-    '۴': '4',
-    '٤': '4',
-    '۵': '5',
-    '٥': '5',
-    '۶': '6',
-    '٦': '6',
-    '۷': '7',
-    '٧': '7',
-    '۸': '8',
-    '٨': '8',
-    '۹': '9',
-    '٩': '9',
+  // --- Initialize form data based on mode and initialData ---
+  const getInitialFormData = () => {
+    if (mode === 'edit' && initialData) {
+      const type = initialData.income > 0 ? 'income' : 'expense';
+      const amount = initialData.income > 0 ? initialData.income : initialData.expense;
+      return {
+        date: initialData.date || '',
+        amount: amount ? amount.toString() : '',
+        type,
+        description: initialData.description || '',
+      };
+    }
+    return { date: '', amount: '', type: 'income', description: '' };
   };
 
-  return str.replace(/[۰-۹٠-٩]/g, (char) => digitMap[char]);
-};
-
-const AddTransactionForm = ({ onCancel }) => {
-  const { dispatch } = useContext(TransactionContext);
-
-  const [formData, setFormData] = useState({
-    date: '',
-    amount: '',
-    type: 'income',
-    description: '',
-  });
+  const [formData, setFormData] = useState(getInitialFormData);
   const [dateError, setDateError] = useState('');
   const [amountError, setAmountError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const [selectedDayObj, setSelectedDayObj] = useState(() => {
+    if (mode === 'edit' && initialData?.date) {
+      return parseDateString(initialData.date);
+    }
+    return null;
+  });
+
+  const minDate = { year: 1300, month: 1, day: 1 };
+  const maxDate = { year: 1450, month: 12, day: 29 };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
 
-    // Convert Persian digits to English for date and amount fields
-    let processedValue = value;
-    if (name === 'date' || name === 'amount') {
-      processedValue = toEnglishDigits(value);
-    }
-
-    setFormData((prev) => ({ ...prev, [name]: processedValue }));
-
-    if (name === 'date') {
-      if (processedValue && !/^\d{4}\/\d{2}\/\d{2}$/.test(processedValue)) {
-        setDateError('فرمت تاریخ باید به صورت YYYY/MM/DD باشد');
-      } else {
-        setDateError('');
-      }
-    }
-
     if (name === 'amount') {
-      const numValue = Number(processedValue);
-      if (processedValue && (numValue <= 0 || isNaN(numValue))) {
-        setAmountError('مبلغ باید بزرگتر از صفر باشد');
-      } else {
-        setAmountError('');
-      }
+      const processedValue = toEnglishDigits(value);
+      setFormData((prev) => ({ ...prev, amount: processedValue }));
+      setAmountError(getAmountError(processedValue));
+      return;
+    }
+
+    if (name === 'description') {
+      setFormData((prev) => ({ ...prev, description: value }));
+    }
+  };
+
+  const handleDateChange = (selectedDay) => {
+    if (selectedDay) {
+      // CHANGED: use shared helper to format date
+      const formatted = formatJalaliDate(selectedDay);
+      setFormData((prev) => ({ ...prev, date: formatted }));
+      setSelectedDayObj(selectedDay);
+      setDateError('');
+    } else {
+      setFormData((prev) => ({ ...prev, date: '' }));
+      setSelectedDayObj(null);
     }
   };
 
@@ -78,52 +80,101 @@ const AddTransactionForm = ({ onCancel }) => {
     setFormData((prev) => ({ ...prev, type: e.target.value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Date validation
-    if (formData.date && !/^\d{4}\/\d{2}\/\d{2}$/.test(formData.date)) {
-      setDateError('فرمت تاریخ باید به صورت YYYY/MM/DD باشد');
+    if (submitting) return;
+
+    if (!formData.date) {
+      setDateError('لطفاً تاریخ را انتخاب کنید');
       return;
     }
 
-    const amountNum = Number(formData.amount);
-    if (!formData.amount || amountNum <= 0 || isNaN(amountNum)) {
+    setAmountError('');
+    if (!formData.amount) {
       setAmountError('مبلغ باید بزرگتر از صفر باشد');
       return;
     }
 
-    const newTransaction = {
+    const amountErrorMsg = getAmountError(formData.amount);
+    if (amountErrorMsg) {
+      setAmountError(amountErrorMsg);
+      return;
+    }
+
+    const amountNum = Number(formData.amount);
+    const transactionData = {
       date: formData.date,
       description: formData.description,
       income: formData.type === 'income' ? amountNum : 0,
       expense: formData.type === 'expense' ? amountNum : 0,
     };
 
-    dispatch({ type: 'ADD_TRANSACTION', payload: newTransaction });
-    onCancel();
+    setSubmitting(true);
+
+    // NEW: try/catch – context functions now throw on failure
+    try {
+      if (mode === 'edit' && initialData?.id) {
+        await editTransaction(initialData.id, transactionData);
+      } else {
+        await addTransaction(transactionData);
+      }
+      // NEW: success – close modal
+      onCancel();
+    } catch {
+      // NEW: show toast error and keep form open
+      showErrorToast('خطا در انجام عملیات');
+      setSubmitting(false);
+    }
   };
 
+  const submitLabel = mode === 'edit' ? 'ویرایش' : 'ثبت';
+
   return (
-    <form className="transaction-form" onSubmit={handleSubmit}>
+    <form className="transaction-form" onSubmit={handleSubmit} noValidate>
       <div className="form-group">
         <label htmlFor="date" className="form-label">
           تاریخ
         </label>
         <div className="input-with-icon">
-          <input
-            type="text"
-            id="date"
-            name="date"
-            value={formData.date}
-            onChange={handleInputChange}
-            required
-            className={`form-input ${dateError ? 'error-input' : ''}`}
-            dir="rtl"
-            autoComplete="off"
+          <DatePicker
+            value={selectedDayObj}
+            onChange={handleDateChange}
+            locale="fa"
+            calendar="persian"
+            minimumDate={minDate}
+            maximumDate={maxDate}
+            shouldHighlightWeekends
+            calendarClassName="compact-calendar"
+            style={{ width: '100%' }}
+            renderInput={({ ref }) => (
+              <>
+                <input
+                  type="text"
+                  id="date"
+                  name="date"
+                  value={toPersianDigits(formData.date)}
+                  onChange={() => {}}
+                  required
+                  className={`form-input pointer ${dateError ? 'error-input' : ''}`}
+                  dir="rtl"
+                  autoComplete="off"
+                  readOnly
+                  ref={ref}
+                  placeholder="برای انتخاب تاریخ کلیک کنید"
+                />
+                <img
+                  src={CalendarIcon}
+                  alt="calendar"
+                  className="calendar-svg"
+                  onClick={() => ref.current.focus()}
+                  style={{ cursor: 'pointer' }}
+                  title="انتخاب تاریخ"
+                />
+                {dateError && <div className="form-error-message">{dateError}</div>}
+              </>
+            )}
           />
-          <img src={CalendarIcon} alt="calendar" className="calendar-svg" />
-          {dateError && <div className="error-message">{dateError}</div>}
         </div>
       </div>
 
@@ -143,7 +194,7 @@ const AddTransactionForm = ({ onCancel }) => {
             dir="rtl"
             min="0"
           />
-          {amountError && <div className="error-message">{amountError}</div>}
+          {amountError && <div className="form-error-message">{amountError}</div>}
         </div>
       </div>
 
@@ -197,8 +248,8 @@ const AddTransactionForm = ({ onCancel }) => {
         <button type="button" className="cancel-button" onClick={onCancel}>
           انصراف
         </button>
-        <button type="submit" className="submit-button">
-          ثبت
+        <button type="submit" className="submit-button" disabled={submitting}>
+          {submitting ? 'در حال ارسال...' : submitLabel}
         </button>
       </div>
     </form>

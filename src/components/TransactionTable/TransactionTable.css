@@ -104,6 +104,7 @@
 .cell-description {
   font-weight: var(--font-weight-regular);
   color: var(--neutrals-dark-2);
+  position: relative; /* NEW: enable absolute positioning context if needed */
 }
 
 .header-actions {
@@ -111,9 +112,9 @@
 }
 
 .cell-actions {
-  text-align: center !important;
-  width: 60px;
+  text-align: center;
   padding: 1rem 0.5rem !important;
+  position: relative;
 }
 
 .delete-button {
@@ -191,6 +192,346 @@
   margin: 0;
 }
 
+/* --- Added for kebab menu dropdown --- */
+.kebab-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.375rem;
+  border-radius: 0.25rem;
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  width: 16px;
+  height: 32px;
+  margin: 0 auto;
+}
+
+.kebab-button:hover {
+  background-color: var(--neutrals-soft-grey-2);
+}
+
+.kebab-button:active {
+  transform: scale(0.95);
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 80%;
+  right: 0;
+  transform: translateX(60%);
+  width: 6rem;
+  background: var(--neutrals-white);
+  border-radius: 0.375rem;
+  padding: 0.25rem;
+  box-shadow:
+    0px 9px 28px 8px #0000000d,
+    0px 3px 6px -4px #0000001f,
+    0px 6px 16px 0px #00000014;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  z-index: 100;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.375rem 0.5rem;
+  background: transparent;
+  border: none;
+  border-radius: 0.25rem;
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  color: var(--neutrals-dark-2);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.dropdown-item:hover {
+  background-color: var(--neutrals-soft-grey-3);
+}
+
+.dropdown-item-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  filter: invert(44%) sepia(8%) saturate(481%) hue-rotate(169deg) brightness(91%) contrast(87%);
+  /* Similar icon color as the old delete button */
+}
+
+.dropdown-menu-above.dropdown-menu {
+  top: auto;
+  bottom: 80%;
+  margin-bottom: 0.25rem;
+  transform: translateX(60%);
+}
+
+/* NEW: Tooltip styles */
+.description-text.has-tooltip {
+  cursor: pointer;
+}
+
+.description-tooltip {
+  position: fixed; /* Use fixed to avoid scroll container clipping */
+  transform: translateX(-50%); /* Center horizontally relative to the trigger */
+  max-width: 280px;
+  background: var(--neutrals-dark-2);
+  color: var(--neutrals-white);
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem;
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  z-index: 200;
+  pointer-events: none; /* Allows clicks to pass through */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  word-break: break-word;
+}
+
+/* Arrow for tooltip (optional) */
+.description-tooltip::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 6px solid var(--neutrals-dark-2);
+}
+
+/* NEW: Loading & error states */
+.loading-text {
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  color: var(--neutrals-grey-1);
+  text-align: center;
+  padding: 2rem;
+}
+
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  gap: 1rem;
+  padding: 2rem;
+}
+
+.retry-button {
+  background-color: var(--primary-brand);
+  color: var(--neutrals-white);
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1.5rem;
+  font-family: var(--font-family);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.retry-button:hover {
+  background-color: var(--primary-dark);
+}
+
+.retry-button:active {
+  transform: scale(0.98);
+}
+
+/* ===== NEW: Toolbar styles for filtering (specific class names to avoid conflicts) ===== */
+
+.tx-filter-toolbar {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.tx-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.tx-filter-label {
+  font-family: var(--font-family);
+  font-weight: var(--font-weight-regular);
+  font-size: var(--font-size-base);
+  line-height: 1.5rem;
+  text-align: right;
+  color: var(--neutrals-dark-2);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.tx-filter-input {
+  width: 100%;
+  height: 2.5rem;
+  padding: 0 0.75rem;
+  padding-left: 2.5rem;
+  border: 0.0625rem solid var(--neutrals-soft-grey-1);
+  border-radius: 0.375rem;
+  background-color: var(--neutrals-white);
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  color: var(--neutrals-dark-2);
+  text-align: right;
+  cursor: pointer;
+}
+
+.tx-filter-input::placeholder {
+  color: var(--neutrals-grey-2);
+  font-size: var(--font-size-sm);
+}
+
+.tx-filter-input:focus {
+  outline: none;
+  border-color: var(--primary-light);
+}
+
+.tx-filter-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.25rem;
+  height: 1.25rem;
+  pointer-events: none;
+  filter: invert(74%) sepia(35%) saturate(600%) hue-rotate(180deg) brightness(98%) contrast(92%);
+}
+
+.tx-filter-select-wrapper {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.tx-filter-select {
+  width: 100%;
+  height: 2.5rem;
+  padding: 0 0.75rem;
+  padding-left: 2.5rem;
+  border: 0.0625rem solid var(--neutrals-soft-grey-1);
+  border-radius: 0.375rem;
+  background-color: var(--neutrals-white);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  color: var(--neutrals-grey-1);
+  text-align: right;
+  cursor: pointer;
+  appearance: none;
+  transition: all 0.3s;
+}
+
+/* FORCE remove outline on select focus */
+.tx-filter-select:focus {
+  outline: none;
+  border: 1px solid var(--primary-light);
+}
+
+.tx-filter-select-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0.75rem;
+  height: 0.75rem;
+  pointer-events: none;
+  filter: invert(74%) sepia(35%) saturate(600%) hue-rotate(180deg) brightness(98%) contrast(92%);
+}
+
+/* NEW: Clear button (X) for date filters */
+.tx-filter-clear-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 0.25rem;
+  transition: background-color 0.2s ease;
+}
+
+.tx-filter-clear-icon:hover {
+  background-color: var(--neutrals-soft-grey-2);
+}
+
+.tx-filter-clear-icon:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.tx-filter-clear-icon svg {
+  width: 1rem;
+  height: 1rem;
+  pointer-events: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .tx-filter-toolbar {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .tx-filter-group {
+    justify-content: space-between;
+  }
+
+  .tx-filter-label {
+    font-size: var(--font-size-sm);
+    width: 4rem;
+  }
+
+  .tx-filter-input-wrapper {
+    width: 100%;
+  }
+
+  .DatePicker {
+    width: 100%;
+  }
+
+  .tx-filter-input,
+  .tx-filter-select {
+    height: 2.25rem;
+    font-size: var(--font-size-sm);
+  }
+
+  .tx-filter-icon {
+    width: 1rem;
+    height: 1rem;
+    left: 0.5rem;
+  }
+
+  /* Fixes z-index problem of 2 calendar fields */
+  .DatePicker:has(.DatePicker__calendarContainer) {
+    z-index: 200 !important;
+  }
+}
+
+/* Prevents the calendar to cause y-scroll on very small screens */
+@media (max-width: 320px) {
+  .compact-calendar {
+    font-size: 7px;
+  }
+}
+
+/* MOBILE adjustments */
 @media (max-width: 768px) {
   .table-container {
     width: 100%;
@@ -278,10 +619,7 @@
     grid-row: 2 / 3;
     text-align: left;
     padding: 0 !important;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    width: 100%;
+    justify-self: flex-end;
   }
 
   .delete-button {
@@ -311,5 +649,22 @@
   .empty-state-text {
     font-size: var(--font-size-sm);
     padding: 0 1rem;
+  }
+
+  .dropdown-menu {
+    top: 110%;
+    right: auto;
+    left: 0;
+    transform: translateX(0);
+  }
+
+  .dropdown-menu-above.dropdown-menu {
+    transform: translateX(0);
+  }
+
+  /* NEW: Larger tooltip on mobile */
+  .description-tooltip {
+    max-width: 90vw;
+    font-size: 0.875rem;
   }
 }
