@@ -1,18 +1,29 @@
-# React + Vite
+# Personal Expense Manager
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A personal financial transaction management system with Persian (Jalali) calendar support and analytical charts.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- User authentication
+- Income and expense tracking
+- Filter and sort by date and amount
+- Analytical charts (income/expense ratio, monthly/daily trends)
+- Responsive pagination
+- Persian digits and date support
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+- React 19 + Vite
+- React Router v7
+- Recharts
+- React Modern Calendar Date Picker (Jalali)
+- JSON Server (mock API)
 
-Note: This will impact Vite dev & build performances.
+## Default Credentials
 
-## Expanding the ESLint configuration
+- Email: user@example.com
+- Password: 123456
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## License
+
+MIT
