@@ -29,7 +29,9 @@ export const AuthProvider = ({ children }) => {
 
     const users = await response.json();
     // NEW: Find user with matching email and password
-    const foundUser = users.find((u) => u.email === email && u.password === password);
+    const foundUser = users.find(
+      (u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password
+    );
 
     if (!foundUser) {
       throw new Error('ایمیل یا رمز ورود اشتباه است!');
