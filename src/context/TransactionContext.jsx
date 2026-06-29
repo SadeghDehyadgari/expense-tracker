@@ -9,12 +9,10 @@ export const TransactionProvider = ({ children }) => {
   const { showErrorToast } = useToast();
   const { data, loading, error, refetch } = useFetch('/api/transactions');
 
-  // FIX: stabilize the transactions reference – always return the same empty array when data is null
   const transactions = useMemo(() => data ?? [], [data]);
 
   const addTransaction = useCallback(
     async (data) => {
-      // [OLD] const res = await fetch('/api/transactions', {
       // [NEW] Use buildApiUrl for MockAPI deployment
       const res = await fetch(buildApiUrl('/api/transactions'), {
         method: 'POST',
@@ -33,7 +31,6 @@ export const TransactionProvider = ({ children }) => {
 
   const editTransaction = useCallback(
     async (id, updatedData) => {
-      // [OLD] const res = await fetch(`/api/transactions/${id}`, {
       // [NEW] Use buildApiUrl for MockAPI deployment
       const res = await fetch(buildApiUrl(`/api/transactions/${id}`), {
         method: 'PUT',
@@ -52,7 +49,6 @@ export const TransactionProvider = ({ children }) => {
 
   const deleteTransaction = useCallback(
     async (id) => {
-      // [OLD] const res = await fetch(`/api/transactions/${id}`, {
       // [NEW] Use buildApiUrl for MockAPI deployment
       const res = await fetch(buildApiUrl(`/api/transactions/${id}`), {
         method: 'DELETE',
@@ -67,7 +63,6 @@ export const TransactionProvider = ({ children }) => {
     [refetch, showErrorToast]
   );
 
-  // NEW: expose refetch as fetchTransactions to fix "Retry" button in Dashboard and TransactionTable
   const fetchTransactions = useCallback(async () => {
     try {
       await refetch();
@@ -84,7 +79,7 @@ export const TransactionProvider = ({ children }) => {
       addTransaction,
       editTransaction,
       deleteTransaction,
-      fetchTransactions, // NEW: added to context for manual retry
+      fetchTransactions,
     }),
     [
       transactions,

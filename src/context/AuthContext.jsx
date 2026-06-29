@@ -1,11 +1,10 @@
 import { createContext, useState, useCallback, useMemo } from 'react';
+// [NEW] Import buildApiUrl to construct full URLs for authentication
 import { buildApiUrl } from '../hooks/useFetch';
 
-// NEW: Auth context for authentication state management
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  // Lazy initialization: only runs once on mount
   const [user, setUser] = useState(() => {
     const storedUser = localStorage.getItem('auth_user');
     if (storedUser) {
@@ -19,10 +18,7 @@ export const AuthProvider = ({ children }) => {
     return null;
   });
 
-  // MODIFIED: Login command validates credentials against json-server /users endpoint
-  // No unnecessary try/catch wrapper - errors propagate naturally to caller
   const login = useCallback(async (email, password) => {
-    // [OLD] const response = await fetch('/api/users');
     // [NEW] Use buildApiUrl for MockAPI deployment
     const response = await fetch(buildApiUrl('/api/users'));
 
@@ -31,7 +27,6 @@ export const AuthProvider = ({ children }) => {
     }
     const users = await response.json();
 
-    // NEW: Find user with matching email and password
     const foundUser = users.find(
       (u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password
     );
@@ -40,19 +35,16 @@ export const AuthProvider = ({ children }) => {
       throw new Error('ایمیل یا رمز ورود اشتباه است!');
     }
 
-    // NEW: Store only safe user data (exclude password)
     const userObj = { id: foundUser.id, email: foundUser.email };
     setUser(userObj);
     localStorage.setItem('auth_user', JSON.stringify(userObj));
   }, []);
 
-  // Logout command: clears user state and localStorage
   const logout = useCallback(() => {
     setUser(null);
     localStorage.removeItem('auth_user');
   }, []);
 
-  // Query: authentication status derived from user
   const isAuthenticated = useMemo(() => !!user, [user]);
 
   const value = useMemo(
