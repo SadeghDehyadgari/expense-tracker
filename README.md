@@ -2,6 +2,8 @@
 
 A personal financial transaction management system with Persian (Jalali) calendar support and analytical charts.
 
+Watch live on: https://expense-tracker-46id.vercel.app/
+
 ## Features
 
 - User authentication
