@@ -1,4 +1,5 @@
 import { createContext, useState, useCallback, useMemo } from 'react';
+import { buildApiUrl } from '../hooks/useFetch';
 
 // NEW: Auth context for authentication state management
 export const AuthContext = createContext();
@@ -21,13 +22,15 @@ export const AuthProvider = ({ children }) => {
   // MODIFIED: Login command validates credentials against json-server /users endpoint
   // No unnecessary try/catch wrapper - errors propagate naturally to caller
   const login = useCallback(async (email, password) => {
-    // NEW: Fetch users from json-server
-    const response = await fetch('/api/users');
+    // [OLD] const response = await fetch('/api/users');
+    // [NEW] Use buildApiUrl for MockAPI deployment
+    const response = await fetch(buildApiUrl('/api/users'));
+
     if (!response.ok) {
       throw new Error('خطا در ارتباط با سرور');
     }
-
     const users = await response.json();
+
     // NEW: Find user with matching email and password
     const foundUser = users.find(
       (u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password

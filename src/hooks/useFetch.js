@@ -1,5 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+
+// [NEW] Helper to map local '/api/' paths to MockAPI's '/api/v1/' structure.
+// [NEW] This prevents us from changing all endpoint strings in the rest of the app.
+const buildApiUrl = (path) => {
+  return `${BASE_URL}${path.replace(/^\/api\//, '/api/v1/')}`;
+};
+
 // Helper: fetch with timeout to prevent hanging on network loss
 const fetchWithTimeout = (url, options = {}, timeout = 10000) => {
   const controller = new AbortController();
@@ -13,8 +21,7 @@ const fetchWithTimeout = (url, options = {}, timeout = 10000) => {
 /**
  * Custom hook for fetching data from a URL.
  * Supports silent refetch (doesn't trigger loading state) with timeout.
- *
- * @param {string} url - The endpoint to fetch.
+ * @param {string} url - The endpoint to fetch (e.g., '/api/transactions').
  * @param {number} timeout - Request timeout in milliseconds (default 10000).
  * @returns {object} { data, loading, error, refetch }
  */
@@ -22,8 +29,10 @@ const useFetch = (url, timeout = 10000) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
   const abortControllerRef = useRef(null);
+
+  // [NEW] Construct the full URL using the buildApiUrl helper
+  const fullUrl = buildApiUrl(url);
 
   // Core fetch logic – returns the parsed JSON or throws an error
   const fetchData = useCallback(
@@ -43,8 +52,9 @@ const useFetch = (url, timeout = 10000) => {
       }
 
       try {
-        // CHANGED: use fetchWithTimeout to prevent hanging
-        const res = await fetchWithTimeout(url, { signal: controller.signal }, timeout);
+        // [OLD] const res = await fetchWithTimeout(url, { signal: controller.signal }, timeout);
+        // [NEW] Use fullUrl to hit the MockAPI endpoint directly
+        const res = await fetchWithTimeout(fullUrl, { signal: controller.signal }, timeout);
         if (!res.ok) throw new Error('خطا در ارتباط با سرور');
         const json = await res.json();
         setData(json);
@@ -61,7 +71,9 @@ const useFetch = (url, timeout = 10000) => {
         throw err; // re-throw so refetch() can be caught
       }
     },
-    [url, timeout]
+    // [OLD] [url, timeout]
+    // [NEW] Added fullUrl to dependencies since it's used inside fetchData
+    [fullUrl, timeout]
   );
 
   // Initial fetch on mount / url change
@@ -82,4 +94,6 @@ const useFetch = (url, timeout = 10000) => {
   return { data, loading, error, refetch };
 };
 
+// [NEW] Export buildApiUrl so other contexts can use it for POST/PUT/DELETE requests
+export { buildApiUrl };
 export default useFetch;

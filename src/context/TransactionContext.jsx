@@ -1,12 +1,12 @@
 import { createContext, useCallback, useMemo } from 'react';
 import { useToast } from '../hooks/useToast';
-import useFetch from '../hooks/useFetch';
+// [NEW] Import buildApiUrl to construct full URLs for mutations
+import useFetch, { buildApiUrl } from '../hooks/useFetch';
 
 const TransactionContext = createContext();
 
 export const TransactionProvider = ({ children }) => {
   const { showErrorToast } = useToast();
-
   const { data, loading, error, refetch } = useFetch('/api/transactions');
 
   // FIX: stabilize the transactions reference – always return the same empty array when data is null
@@ -14,7 +14,9 @@ export const TransactionProvider = ({ children }) => {
 
   const addTransaction = useCallback(
     async (data) => {
-      const res = await fetch('/api/transactions', {
+      // [OLD] const res = await fetch('/api/transactions', {
+      // [NEW] Use buildApiUrl for MockAPI deployment
+      const res = await fetch(buildApiUrl('/api/transactions'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -31,7 +33,9 @@ export const TransactionProvider = ({ children }) => {
 
   const editTransaction = useCallback(
     async (id, updatedData) => {
-      const res = await fetch(`/api/transactions/${id}`, {
+      // [OLD] const res = await fetch(`/api/transactions/${id}`, {
+      // [NEW] Use buildApiUrl for MockAPI deployment
+      const res = await fetch(buildApiUrl(`/api/transactions/${id}`), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedData),
@@ -48,7 +52,9 @@ export const TransactionProvider = ({ children }) => {
 
   const deleteTransaction = useCallback(
     async (id) => {
-      const res = await fetch(`/api/transactions/${id}`, {
+      // [OLD] const res = await fetch(`/api/transactions/${id}`, {
+      // [NEW] Use buildApiUrl for MockAPI deployment
+      const res = await fetch(buildApiUrl(`/api/transactions/${id}`), {
         method: 'DELETE',
       });
       if (!res.ok) throw new Error('خطا در حذف تراکنش');

@@ -13,14 +13,5 @@ export default defineConfig({
   ],
   server: {
     host: true, // Allows access from local network (mobile devices, other PCs)
-    // NEW: Proxy configuration to avoid "failed to fetch" on mobile
-    // Any request to /api/* will be forwarded to http://localhost:3000/*
-    proxy: {
-      '/api': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ''), // remove /api prefix
-      },
-    },
   },
 });
